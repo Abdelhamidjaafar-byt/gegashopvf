@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { MapPin, Package, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { useMyOrders } from '@/hooks/useOrders'
 import { useAddresses } from '@/hooks/useAddresses'
 import { useWishlist } from '@/contexts/WishlistContext'
@@ -23,7 +24,7 @@ const emptyAddress = { label: 'Home', full_name: '', phone: '', street: '', city
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, refreshProfile } = useAuth()
   const [params] = useSearchParams()
   const { orders, loading: ordersLoading } = useMyOrders(user?.id)
   const { addresses, save, remove } = useAddresses(user?.id)
@@ -32,6 +33,31 @@ export default function ProfilePage() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Partial<Address> & { id?: string }>(emptyAddress)
+  const [accountName, setAccountName] = useState('')
+  const [accountPhone, setAccountPhone] = useState('')
+  const [savingAccount, setSavingAccount] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setAccountName(user.display_name || '')
+      setAccountPhone(user.phone || '')
+    }
+  }, [user])
+
+  const submitAccount = async () => {
+    if (!user) return
+    setSavingAccount(true)
+    const { error } = await supabase
+      .from('users')
+      .update({ display_name: accountName, phone: accountPhone })
+      .eq('id', user.id)
+    setSavingAccount(false)
+    if (error) toast.error(error.message)
+    else {
+      await refreshProfile()
+      toast.success(t('common.saved'))
+    }
+  }
 
   if (authLoading) return null
   if (!user) return <Navigate to="/auth" replace />
@@ -65,6 +91,28 @@ export default function ProfilePage() {
           <Button asChild variant="outline" className="border-volt text-volt hover:bg-volt/10">
             <Link to="/admin">{t('nav.admin')}</Link>
           </Button>
+        )}
+      </div>
+
+      <div className="mt-6 rounded-md border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-bold">{t('profile.accountDetails')}</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <Label>{t('auth.displayName')}</Label>
+            <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} className="mt-1.5 bg-secondary" />
+          </div>
+          <div>
+            <Label>{t('profile.whatsappNumber')}</Label>
+            <Input value={accountPhone} onChange={(e) => setAccountPhone(e.target.value)} placeholder="+212 …" className="mt-1.5 bg-secondary" />
+          </div>
+          <div className="flex items-end">
+            <Button onClick={submitAccount} disabled={savingAccount} className="bg-volt font-semibold text-volt-fg hover:bg-volt-dim">
+              {t('admin.save')}
+            </Button>
+          </div>
+        </div>
+        {user.role === 'admin' && (
+          <p className="mt-3 text-xs text-muted-foreground">{t('profile.whatsappHint')}</p>
         )}
       </div>
 

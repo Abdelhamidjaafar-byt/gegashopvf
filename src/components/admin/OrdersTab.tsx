@@ -53,7 +53,7 @@ export default function OrdersTab() {
                   {o.shipping_address.full_name} · {o.shipping_address.phone} · {o.shipping_address.street}, {o.shipping_address.city}
                 </p>
                 <p className="text-xs text-muted-foreground/70">
-                  {o.shipping_method === 'cathedis_express' ? 'Cathedis Express' : 'Cathedis Standard'} · {o.payment_method === 'cod' ? 'COD' : 'Card'}
+                  {o.shipping_method === 'cathedis_express' ? 'Cathedis Express' : 'Cathedis Standard'} · {o.payment_method === 'whatsapp' ? 'WhatsApp' : o.payment_method === 'cod' ? 'COD' : 'Card'}
                 </p>
               </TableCell>
               <TableCell className="text-sm">{o.customer_email}</TableCell>

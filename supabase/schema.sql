@@ -70,7 +70,7 @@ create table if not exists public.orders (
   shipping_method  text not null,                  -- 'cathedis_standard' | 'cathedis_express'
   shipping_cost    numeric(10,2) not null default 0,
   total            numeric(10,2) not null,
-  payment_method   text not null,                  -- 'card' | 'cod'
+  payment_method   text not null,                  -- 'whatsapp' | 'card' | 'cod'
   shipping_address jsonb not null,                 -- {full_name,phone,street,city,postal_code,country}
   status           text not null default 'processing'
                    check (status in ('processing','shipped','delivered','cancelled')),
@@ -271,3 +271,20 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   alter publication supabase_realtime add table public.orders;
 exception when duplicate_object then null; end $$;
+
+-- ---------- WhatsApp order handoff ----------
+-- Returns the platform admin's WhatsApp number (digits only), used at
+-- checkout to route orders. Admins set their number in Profile.
+create or replace function public.admin_whatsapp()
+returns text
+language sql stable security definer
+set search_path = public
+as $$
+  select nullif(regexp_replace(phone, '\D', '', 'g'), '')
+  from public.users
+  where role = 'admin' and phone is not null
+  order by created_at
+  limit 1
+$$;
+
+grant execute on function public.admin_whatsapp() to anon, authenticated;

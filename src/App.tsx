@@ -5,7 +5,6 @@ import { CartProvider } from '@/contexts/CartContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import DemoBanner from '@/components/DemoBanner'
 import HomePage from '@/pages/HomePage'
 import ShopPage from '@/pages/ShopPage'
 import BuilderPage from '@/pages/BuilderPage'
@@ -23,7 +22,6 @@ export default function App() {
       <CartProvider>
         <WishlistProvider>
           <div className="flex min-h-screen flex-col bg-background">
-            <DemoBanner />
             <Navbar />
             <main className="flex-1">
               <Routes>

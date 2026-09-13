@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, CreditCard, Banknote, Truck, Zap } from 'lucide-react'
+import { CheckCircle2, MessageCircle, Truck, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart } from '@/contexts/CartContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAddresses } from '@/hooks/useAddresses'
 import { placeOrder } from '@/hooks/useOrders'
 import { formatPrice } from '@/lib/format'
-import { SHIPPING_OPTIONS, type PaymentMethod, type ShippingMethod } from '@/types'
+import { FALLBACK_WHATSAPP, whatsappLink } from '@/lib/store'
+import { supabase } from '@/lib/supabase'
+import { SHIPPING_OPTIONS, type ShippingMethod } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,10 +33,9 @@ export default function CheckoutPage() {
     country: 'Morocco',
   })
   const [shipping, setShipping] = useState<ShippingMethod>('cathedis_standard')
-  const [payment, setPayment] = useState<PaymentMethod>('cod')
-  const [card, setCard] = useState({ number: '', name: '', expiry: '', cvc: '' })
   const [placing, setPlacing] = useState(false)
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [waLink, setWaLink] = useState<string | null>(null)
 
   const shippingCost = useMemo(() => {
     const opt = SHIPPING_OPTIONS[shipping]
@@ -67,10 +68,6 @@ export default function CheckoutPage() {
       toast.error(t('checkout.fillAll'))
       return
     }
-    if (payment === 'card' && (!card.number || !card.name || !card.expiry || !card.cvc)) {
-      toast.error(t('checkout.fillAll'))
-      return
-    }
     setPlacing(true)
     const { id, error } = await placeOrder({
       user_id: user.id,
@@ -86,7 +83,7 @@ export default function CheckoutPage() {
       shipping_method: shipping,
       shipping_cost: shippingCost,
       total,
-      payment_method: payment,
+      payment_method: 'whatsapp',
       shipping_address: form,
     })
     setPlacing(false)
@@ -94,6 +91,28 @@ export default function CheckoutPage() {
       toast.error(error)
       return
     }
+    const { data: adminPhone } = await supabase.rpc('admin_whatsapp')
+    const link = whatsappLink(
+      (adminPhone as string | null) || FALLBACK_WHATSAPP,
+      t('checkout.whatsappMessage', {
+        id: id || '',
+        name: form.full_name,
+        email: user.email,
+        phone: form.phone,
+        street: form.street,
+        city: form.city,
+        postal: form.postal_code || '',
+        items: items
+          .map(({ product, qty }) => `• ${qty} × ${product.name} — ${formatPrice(Number(product.price) * qty, i18n.language)}`)
+          .join('\n'),
+        subtotal: formatPrice(subtotal, i18n.language),
+        shipping: shippingCost === 0 ? t('checkout.free') : formatPrice(shippingCost, i18n.language),
+        shippingMethod: SHIPPING_OPTIONS[shipping].label,
+        total: formatPrice(total, i18n.language),
+      }),
+    )
+    setWaLink(link)
+    window.open(link, '_blank', 'noopener')
     setOrderId(id || null)
     clear()
     window.scrollTo(0, 0)
@@ -105,7 +124,14 @@ export default function CheckoutPage() {
         <CheckCircle2 className="mx-auto h-16 w-16 text-volt" />
         <h1 className="mt-6 font-display text-3xl font-bold">{t('checkout.successTitle')}</h1>
         <p className="mt-3 text-muted-foreground">{t('checkout.successBody', { id: orderId })}</p>
-        <div className="mt-8 flex justify-center gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          {waLink && (
+            <Button asChild className="bg-[#25D366] font-semibold text-white hover:bg-[#1ebe5b]">
+              <a href={waLink} target="_blank" rel="noreferrer">
+                <MessageCircle className="mr-2 h-4 w-4" /> {t('checkout.whatsappButton')}
+              </a>
+            </Button>
+          )}
           <Button asChild className="bg-volt font-semibold text-volt-fg hover:bg-volt-dim">
             <Link to="/profile">{t('checkout.viewOrders')}</Link>
           </Button>
@@ -136,7 +162,7 @@ export default function CheckoutPage() {
           {/* Address */}
           <section className="rounded-md border border-border bg-card p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-              <Truck className="h-5 w-5 text-volt" /> {t('checkout.shippingAddress')}
+              <Truck className="h-5 w-5 text-volt" /> {t('checkout.billingInfo')}
             </h2>
             {addresses.length > 0 && (
               <div className="mt-4">
@@ -210,46 +236,6 @@ export default function CheckoutPage() {
               <p className="mt-3 text-xs text-muted-foreground">{t('home.freeShipping')}</p>
             )}
           </section>
-
-          {/* Payment */}
-          <section className="rounded-md border border-border bg-card p-6">
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-              <CreditCard className="h-5 w-5 text-volt" /> {t('checkout.payment')}
-            </h2>
-            <RadioGroup value={payment} onValueChange={(v) => setPayment(v as PaymentMethod)} className="mt-4 space-y-3">
-              <label className={`flex cursor-pointer items-center gap-3 rounded-md border p-4 transition-colors ${payment === 'card' ? 'border-volt bg-volt/5' : 'border-border hover:border-muted-foreground/40'}`}>
-                <RadioGroupItem value="card" id="card" />
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-semibold">{t('checkout.card')}</span>
-              </label>
-              <label className={`flex cursor-pointer items-center gap-3 rounded-md border p-4 transition-colors ${payment === 'cod' ? 'border-volt bg-volt/5' : 'border-border hover:border-muted-foreground/40'}`}>
-                <RadioGroupItem value="cod" id="cod" />
-                <Banknote className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-semibold">{t('checkout.cod')}</span>
-              </label>
-            </RadioGroup>
-            {payment === 'card' && (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <Label>{t('checkout.cardNumber')} *</Label>
-                  <Input value={card.number} onChange={(e) => setCard({ ...card, number: e.target.value })} placeholder="4242 4242 4242 4242" className="mt-1.5 bg-secondary" maxLength={19} />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label>{t('checkout.cardName')} *</Label>
-                  <Input value={card.name} onChange={(e) => setCard({ ...card, name: e.target.value })} className="mt-1.5 bg-secondary" />
-                </div>
-                <div>
-                  <Label>{t('checkout.cardExpiry')} *</Label>
-                  <Input value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value })} placeholder="12/28" className="mt-1.5 bg-secondary" maxLength={5} />
-                </div>
-                <div>
-                  <Label>{t('checkout.cardCvc')} *</Label>
-                  <Input value={card.cvc} onChange={(e) => setCard({ ...card, cvc: e.target.value })} placeholder="123" className="mt-1.5 bg-secondary" maxLength={4} />
-                </div>
-                <p className="text-xs text-muted-foreground sm:col-span-2">{t('checkout.cardDemoNote')}</p>
-              </div>
-            )}
-          </section>
         </div>
 
         {/* Summary */}
@@ -285,10 +271,14 @@ export default function CheckoutPage() {
               <span className="text-volt">{formatPrice(total, i18n.language)}</span>
             </div>
           </div>
+          <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+            <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#25D366]" />
+            {t('checkout.whatsappNote')}
+          </p>
           <Button
             onClick={submit}
             disabled={placing}
-            className="mt-6 w-full bg-volt font-bold text-volt-fg hover:bg-volt-dim"
+            className="mt-4 w-full bg-volt font-bold text-volt-fg hover:bg-volt-dim"
             size="lg"
           >
             {placing ? t('checkout.placing') : t('checkout.placeOrder')}

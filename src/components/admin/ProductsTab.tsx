@@ -2,9 +2,8 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { supabase, isDemoMode } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
-import { demoProducts } from '@/lib/demo-data'
 import { fileToResizedDataUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
 import type { Product } from '@/types'
@@ -100,25 +99,15 @@ export default function ProductsTab() {
       is_featured: form.is_featured,
     }
     setSaving(true)
-    if (isDemoMode || !supabase) {
-      if (form.id) {
-        const i = demoProducts.findIndex((p) => p.id === form.id)
-        if (i >= 0) demoProducts[i] = { ...demoProducts[i], ...payload }
-      } else {
-        demoProducts.unshift({ ...payload, id: `local-${Date.now()}`, created_at: new Date().toISOString() } as Product)
-      }
-      toast.success(t('common.saved'))
-    } else {
-      const res = form.id
-        ? await supabase.from('products').update(payload).eq('id', form.id)
-        : await supabase.from('products').insert(payload)
-      if (res.error) {
-        toast.error(res.error.message)
-        setSaving(false)
-        return
-      }
-      toast.success(t('common.saved'))
+    const res = form.id
+      ? await supabase.from('products').update(payload).eq('id', form.id)
+      : await supabase.from('products').insert(payload)
+    if (res.error) {
+      toast.error(res.error.message)
+      setSaving(false)
+      return
     }
+    toast.success(t('common.saved'))
     setSaving(false)
     setOpen(false)
     refetch()
@@ -126,15 +115,10 @@ export default function ProductsTab() {
 
   const remove = async (id: string) => {
     if (!confirm(t('admin.confirmDelete'))) return
-    if (isDemoMode || !supabase) {
-      const i = demoProducts.findIndex((p) => p.id === id)
-      if (i >= 0) demoProducts.splice(i, 1)
-    } else {
-      const { error } = await supabase.from('products').delete().eq('id', id)
-      if (error) {
-        toast.error(error.message)
-        return
-      }
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) {
+      toast.error(error.message)
+      return
     }
     toast.success(t('common.deleted'))
     refetch()

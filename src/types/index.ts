@@ -62,7 +62,7 @@ export interface ShippingAddress {
 }
 
 export type ShippingMethod = 'cathedis_standard' | 'cathedis_express'
-export type PaymentMethod = 'card' | 'cod'
+export type PaymentMethod = 'card' | 'cod' | 'whatsapp'
 
 export interface Order {
   id: string

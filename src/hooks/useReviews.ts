@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase, isDemoMode } from '@/lib/supabase'
-import { demoReviews } from '@/lib/demo-data'
+import { supabase } from '@/lib/supabase'
 import type { Review } from '@/types'
 
 export function useReviews(productId: string | undefined) {
@@ -9,11 +8,6 @@ export function useReviews(productId: string | undefined) {
 
   const refetch = useCallback(async () => {
     if (!productId) return
-    if (isDemoMode || !supabase) {
-      setReviews(demoReviews.filter((r) => r.product_id === productId))
-      setLoading(false)
-      return
-    }
     const { data } = await supabase
       .from('reviews')
       .select('*, users(display_name)')
@@ -32,21 +26,8 @@ export function useReviews(productId: string | undefined) {
   }, [refetch])
 
   const addReview = useCallback(
-    async (userId: string, rating: number, comment: string, author: string) => {
+    async (userId: string, rating: number, comment: string) => {
       if (!productId) return { error: 'no-product' }
-      if (isDemoMode || !supabase) {
-        const review: Review = {
-          id: `local-${Date.now()}`,
-          product_id: productId,
-          user_id: userId,
-          rating,
-          comment,
-          created_at: new Date().toISOString(),
-          author,
-        }
-        setReviews((prev) => [review, ...prev])
-        return {}
-      }
       const { error } = await supabase
         .from('reviews')
         .upsert({ product_id: productId, user_id: userId, rating, comment })

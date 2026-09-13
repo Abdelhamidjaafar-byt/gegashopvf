@@ -1,22 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase, isDemoMode, channelName } from '@/lib/supabase'
+import { supabase, channelName } from '@/lib/supabase'
 import type { Order } from '@/types'
-
-const DEMO_ORDERS_KEY = 'eg_demo_orders'
-
-function readDemoOrders(userId?: string): Order[] {
-  try {
-    const all: Order[] = JSON.parse(localStorage.getItem(DEMO_ORDERS_KEY) || '[]')
-    return userId ? all.filter((o) => o.user_id === userId) : all
-  } catch {
-    return []
-  }
-}
-
-function writeDemoOrder(order: Order) {
-  const all = readDemoOrders()
-  localStorage.setItem(DEMO_ORDERS_KEY, JSON.stringify([order, ...all]))
-}
 
 /** Orders for the signed-in customer. */
 export function useMyOrders(userId: string | undefined) {
@@ -26,11 +10,6 @@ export function useMyOrders(userId: string | undefined) {
   const refetch = useCallback(async () => {
     if (!userId) {
       setOrders([])
-      setLoading(false)
-      return
-    }
-    if (isDemoMode || !supabase) {
-      setOrders(readDemoOrders(userId))
       setLoading(false)
       return
     }
@@ -57,11 +36,6 @@ export function useAllOrders(enabled: boolean) {
 
   const refetch = useCallback(async () => {
     if (!enabled) return
-    if (isDemoMode || !supabase) {
-      setOrders(readDemoOrders())
-      setLoading(false)
-      return
-    }
     const { data } = await supabase
       .from('orders')
       .select('*')
@@ -72,7 +46,7 @@ export function useAllOrders(enabled: boolean) {
 
   useEffect(() => {
     refetch()
-    if (!enabled || isDemoMode || !supabase) return
+    if (!enabled) return
     const client = supabase
     const channel = client
       .channel(channelName('orders'))
@@ -89,11 +63,6 @@ export function useAllOrders(enabled: boolean) {
 export async function placeOrder(
   order: Omit<Order, 'id' | 'created_at' | 'status'>,
 ): Promise<{ id?: string; error?: string }> {
-  if (isDemoMode || !supabase) {
-    const id = `demo-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
-    writeDemoOrder({ ...order, id, status: 'processing', created_at: new Date().toISOString() })
-    return { id }
-  }
   const { data, error } = await supabase
     .from('orders')
     .insert({ ...order, status: 'processing' })
@@ -104,11 +73,6 @@ export async function placeOrder(
 }
 
 export async function updateOrderStatus(orderId: string, status: Order['status']) {
-  if (isDemoMode || !supabase) {
-    const all = readDemoOrders().map((o) => (o.id === orderId ? { ...o, status } : o))
-    localStorage.setItem(DEMO_ORDERS_KEY, JSON.stringify(all))
-    return {}
-  }
   const { error } = await supabase.from('orders').update({ status }).eq('id', orderId)
   return { error: error?.message }
 }

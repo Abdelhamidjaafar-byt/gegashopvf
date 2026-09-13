@@ -79,7 +79,7 @@
   "checkout": {
     "title": "Paiement",
     "contact": "Contact",
-    "shippingAddress": "Adresse de livraison",
+    "billingInfo": "Informations de facturation",
     "savedAddresses": "Adresses enregistrées",
     "fullName": "Nom complet",
     "phone": "Téléphone",
@@ -88,14 +88,9 @@
     "postalCode": "Code postal",
     "country": "Pays",
     "shippingMethod": "Mode de livraison",
-    "payment": "Paiement",
-    "card": "Carte bancaire",
-    "cod": "Paiement à la livraison",
-    "cardNumber": "Numéro de carte",
-    "cardName": "Nom sur la carte",
-    "cardExpiry": "MM/AA",
-    "cardCvc": "CVC",
-    "cardDemoNote": "Paiement de démonstration — aucun montant n'est débité.",
+    "whatsappNote": "Aucun paiement en ligne — passer la commande l'enregistre et ouvre WhatsApp pour la confirmer directement avec nous.",
+    "whatsappButton": "Envoyer la commande sur WhatsApp",
+    "whatsappMessage": "Nouvelle commande {{id}}\n\nClient : {{name}}\nEmail : {{email}}\nTéléphone : {{phone}}\nAdresse de facturation : {{street}}, {{city}} {{postal}}\n\nArticles :\n{{items}}\n\nSous-total : {{subtotal}}\nLivraison ({{shippingMethod}}) : {{shipping}}\nTotal : {{total}}\n\n— Envoyé depuis ElectroGega",
     "placeOrder": "Passer la commande",
     "placing": "Commande en cours…",
     "subtotal": "Sous-total",
@@ -118,15 +113,13 @@
     "signUp": "Créer le compte",
     "noAccount": "Pas encore de compte ? Inscrivez-vous",
     "hasAccount": "Déjà un compte ? Connectez-vous",
-    "checkInbox": "Consultez votre boîte mail pour confirmer votre e-mail.",
-    "demoTitle": "Mode démo",
-    "demoBody": "Supabase n'est pas configuré : explorez avec un compte de démonstration :",
-    "demoAdmin": "Explorer en tant qu'admin",
-    "demoCustomer": "Explorer en tant que client",
-    "notConfigured": "Les identifiants Supabase ne sont pas configurés. Ajoutez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY pour activer les comptes réels."
+    "checkInbox": "Consultez votre boîte mail pour confirmer votre e-mail."
   },
   "profile": {
     "title": "Mon compte",
+    "accountDetails": "Informations du compte",
+    "whatsappNumber": "Numéro WhatsApp",
+    "whatsappHint": "Avec indicatif pays — les commandes clients sont envoyées à ce numéro (administrateurs).",
     "orders": "Commandes",
     "addresses": "Adresses",
     "wishlistTab": "Favoris",
@@ -187,10 +180,6 @@
     "noOrders": "Aucune commande pour le moment.",
     "live": "En direct",
     "noParent": "Aucune (catégorie principale)"
-  },
-  "demo": {
-    "banner": "Mode démo — connectez votre projet Supabase pour des données réelles.",
-    "how": "Guide d'installation"
   },
   "common": {
     "loading": "Chargement…",

@@ -79,7 +79,7 @@
   "checkout": {
     "title": "Checkout",
     "contact": "Contact",
-    "shippingAddress": "Shipping address",
+    "billingInfo": "Billing information",
     "savedAddresses": "Saved addresses",
     "fullName": "Full name",
     "phone": "Phone",
@@ -88,14 +88,9 @@
     "postalCode": "Postal code",
     "country": "Country",
     "shippingMethod": "Delivery method",
-    "payment": "Payment",
-    "card": "Credit / debit card",
-    "cod": "Cash on delivery",
-    "cardNumber": "Card number",
-    "cardName": "Name on card",
-    "cardExpiry": "MM/YY",
-    "cardCvc": "CVC",
-    "cardDemoNote": "Demo checkout — no payment is processed.",
+    "whatsappNote": "No online payment — placing your order saves it and opens WhatsApp so you can confirm it with us directly.",
+    "whatsappButton": "Send order on WhatsApp",
+    "whatsappMessage": "New order {{id}}\n\nCustomer: {{name}}\nEmail: {{email}}\nPhone: {{phone}}\nBilling address: {{street}}, {{city}} {{postal}}\n\nItems:\n{{items}}\n\nSubtotal: {{subtotal}}\nDelivery ({{shippingMethod}}): {{shipping}}\nTotal: {{total}}\n\n— Sent from ElectroGega",
     "placeOrder": "Place order",
     "placing": "Placing order…",
     "subtotal": "Subtotal",
@@ -118,15 +113,13 @@
     "signUp": "Create account",
     "noAccount": "No account yet? Sign up",
     "hasAccount": "Already have an account? Sign in",
-    "checkInbox": "Check your inbox to confirm your email.",
-    "demoTitle": "Demo mode",
-    "demoBody": "Supabase is not configured, so you can explore with a demo account:",
-    "demoAdmin": "Explore as admin",
-    "demoCustomer": "Explore as customer",
-    "notConfigured": "Supabase credentials are not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to enable real accounts."
+    "checkInbox": "Check your inbox to confirm your email."
   },
   "profile": {
     "title": "My account",
+    "accountDetails": "Account details",
+    "whatsappNumber": "WhatsApp number",
+    "whatsappHint": "With country code — customer orders are sent to this number (admins).",
     "orders": "Orders",
     "addresses": "Addresses",
     "wishlistTab": "Wishlist",
@@ -187,10 +180,6 @@
     "noOrders": "No orders yet.",
     "live": "Live",
     "noParent": "None (top-level category)"
-  },
-  "demo": {
-    "banner": "Demo mode — connect your Supabase project for live data and real accounts.",
-    "how": "Setup guide"
   },
   "common": {
     "loading": "Loading…",

@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase, isDemoMode, channelName } from '@/lib/supabase'
-import { demoBrands, demoCategories, demoProducts } from '@/lib/demo-data'
+import { supabase, channelName } from '@/lib/supabase'
 import type { Brand, Category, Product } from '@/types'
 
 /**
  * Products / categories / brands — fetched from Supabase with realtime
- * sync (postgres_changes), or from bundled demo data when Supabase
- * credentials are not configured.
+ * sync (postgres_changes).
  */
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([])
@@ -14,11 +12,6 @@ export function useProducts() {
   const [error, setError] = useState<string | null>(null)
 
   const refetch = useCallback(async () => {
-    if (isDemoMode || !supabase) {
-      setProducts(demoProducts)
-      setLoading(false)
-      return
-    }
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -30,7 +23,6 @@ export function useProducts() {
 
   useEffect(() => {
     refetch()
-    if (isDemoMode || !supabase) return
     const client = supabase
     const channel = client
       .channel(channelName('products'))
@@ -49,11 +41,6 @@ export function useCategories() {
   const [loading, setLoading] = useState(true)
 
   const refetch = useCallback(async () => {
-    if (isDemoMode || !supabase) {
-      setCategories(demoCategories)
-      setLoading(false)
-      return
-    }
     const { data } = await supabase.from('categories').select('*').order('name')
     setCategories((data || []) as Category[])
     setLoading(false)
@@ -61,7 +48,6 @@ export function useCategories() {
 
   useEffect(() => {
     refetch()
-    if (isDemoMode || !supabase) return
     const client = supabase
     const channel = client
       .channel(channelName('categories'))
@@ -80,11 +66,6 @@ export function useBrands() {
   const [loading, setLoading] = useState(true)
 
   const refetch = useCallback(async () => {
-    if (isDemoMode || !supabase) {
-      setBrands(demoBrands)
-      setLoading(false)
-      return
-    }
     const { data } = await supabase.from('brands').select('*').order('name')
     setBrands((data || []) as Brand[])
     setLoading(false)
@@ -92,7 +73,6 @@ export function useBrands() {
 
   useEffect(() => {
     refetch()
-    if (isDemoMode || !supabase) return
     const client = supabase
     const channel = client
       .channel(channelName('brands'))

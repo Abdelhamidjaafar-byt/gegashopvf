@@ -73,7 +73,7 @@ export default function ProductPage() {
   const submitReview = async () => {
     if (!user) return
     setSubmitting(true)
-    const { error } = await addReview(user.id, rating, comment, user.display_name || 'Customer')
+    const { error } = await addReview(user.id, rating, comment)
     setSubmitting(false)
     if (error) toast.error(error)
     else {

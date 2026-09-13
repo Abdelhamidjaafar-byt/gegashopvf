@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { supabase, isDemoMode } from '@/lib/supabase'
-import { demoAdmin, demoCustomer } from '@/lib/demo-data'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatDate } from '@/lib/format'
 import type { UserProfile } from '@/types'
@@ -23,11 +22,6 @@ export default function UsersTab() {
   const [loading, setLoading] = useState(true)
 
   const refetch = useCallback(async () => {
-    if (isDemoMode || !supabase) {
-      setUsers([demoAdmin, demoCustomer])
-      setLoading(false)
-      return
-    }
     const { data } = await supabase.from('users').select('*').order('created_at')
     setUsers((data || []) as UserProfile[])
     setLoading(false)
@@ -38,11 +32,6 @@ export default function UsersTab() {
   }, [refetch])
 
   const setRole = async (id: string, role: 'admin' | 'customer') => {
-    if (isDemoMode || !supabase) {
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)))
-      toast.success(t('common.saved'))
-      return
-    }
     const { error } = await supabase.from('users').update({ role }).eq('id', id)
     if (error) {
       toast.error(error.message)

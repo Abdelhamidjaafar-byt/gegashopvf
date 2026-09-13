@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { supabase, isDemoMode } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthContext'
 
 interface WishlistContextValue {
@@ -10,7 +10,6 @@ interface WishlistContextValue {
 }
 
 const WishlistContext = createContext<WishlistContextValue | null>(null)
-const KEY = 'eg_wishlist_demo'
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
@@ -22,15 +21,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     async function load() {
       if (!user) {
         setIds(new Set())
-        return
-      }
-      if (isDemoMode || !supabase) {
-        try {
-          const raw = JSON.parse(localStorage.getItem(`${KEY}:${user.id}`) || '[]')
-          if (!cancelled) setIds(new Set(raw))
-        } catch {
-          /* ignore */
-        }
         return
       }
       setLoading(true)
@@ -52,16 +42,6 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     async (productId: string) => {
       if (!user) return false
       const inList = ids.has(productId)
-      if (isDemoMode || !supabase) {
-        setIds((prev) => {
-          const next = new Set(prev)
-          if (inList) next.delete(productId)
-          else next.add(productId)
-          localStorage.setItem(`${KEY}:${user.id}`, JSON.stringify([...next]))
-          return next
-        })
-        return !inList
-      }
       if (inList) {
         await supabase.from('wishlists').delete().eq('user_id', user.id).eq('product_id', productId)
         setIds((prev) => {

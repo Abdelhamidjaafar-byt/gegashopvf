@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { supabase, isDemoMode } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { useCategories, useBrands } from '@/hooks/useCatalog'
-import { demoBrands, demoCategories } from '@/lib/demo-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -27,14 +26,10 @@ export default function TaxonomyTab() {
   const addCategory = async () => {
     if (!catName.trim()) return
     const parentId = catParent === ROOT ? null : catParent
-    if (isDemoMode || !supabase) {
-      demoCategories.push({ id: `local-${Date.now()}`, name: catName.trim(), slug: slugify(catName), parent_id: parentId })
-    } else {
-      const { error } = await supabase.from('categories').insert({ name: catName.trim(), slug: slugify(catName), parent_id: parentId })
-      if (error) {
-        toast.error(error.message)
-        return
-      }
+    const { error } = await supabase.from('categories').insert({ name: catName.trim(), slug: slugify(catName), parent_id: parentId })
+    if (error) {
+      toast.error(error.message)
+      return
     }
     setCatName('')
     toast.success(t('common.saved'))
@@ -43,14 +38,10 @@ export default function TaxonomyTab() {
 
   const addBrand = async () => {
     if (!brandName.trim()) return
-    if (isDemoMode || !supabase) {
-      demoBrands.push({ id: `local-${Date.now()}`, name: brandName.trim() })
-    } else {
-      const { error } = await supabase.from('brands').insert({ name: brandName.trim() })
-      if (error) {
-        toast.error(error.message)
-        return
-      }
+    const { error } = await supabase.from('brands').insert({ name: brandName.trim() })
+    if (error) {
+      toast.error(error.message)
+      return
     }
     setBrandName('')
     toast.success(t('common.saved'))
@@ -59,26 +50,16 @@ export default function TaxonomyTab() {
 
   const removeCategory = async (id: string) => {
     if (!confirm(t('admin.confirmDelete'))) return
-    if (isDemoMode || !supabase) {
-      const i = demoCategories.findIndex((c) => c.id === id)
-      if (i >= 0) demoCategories.splice(i, 1)
-    } else {
-      const { error } = await supabase.from('categories').delete().eq('id', id)
-      if (error) { toast.error(error.message); return }
-    }
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+    if (error) { toast.error(error.message); return }
     toast.success(t('common.deleted'))
     refetchCats()
   }
 
   const removeBrand = async (id: string) => {
     if (!confirm(t('admin.confirmDelete'))) return
-    if (isDemoMode || !supabase) {
-      const i = demoBrands.findIndex((b) => b.id === id)
-      if (i >= 0) demoBrands.splice(i, 1)
-    } else {
-      const { error } = await supabase.from('brands').delete().eq('id', id)
-      if (error) { toast.error(error.message); return }
-    }
+    const { error } = await supabase.from('brands').delete().eq('id', id)
+    if (error) { toast.error(error.message); return }
     toast.success(t('common.deleted'))
     refetchBrands()
   }

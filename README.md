@@ -2,7 +2,7 @@
 
 Full-stack electronics store: React 19 + TypeScript + Vite + Tailwind + shadcn/ui on the front,
 Supabase (PostgreSQL + Auth + Realtime) on the back. English/French i18n, MAD pricing,
-Cathedis delivery options, COD/card checkout, reviews, wishlist, address book, and a
+Cathedis delivery options, WhatsApp order handoff to the platform admin, reviews, wishlist, address book, and a
 realtime admin hub with role-based access.
 
 ## Quick start
@@ -13,8 +13,8 @@ cp .env.example .env   # fill in your Supabase credentials
 npm run dev
 ```
 
-> No `.env`? The app runs in **demo mode** — fully browsable with bundled sample
-> products and demo admin/customer logins. Nothing is persisted to a server in demo mode.
+> `.env` is required — the app throws at startup if the Supabase credentials are
+> missing or invalid.
 
 ## Connecting your Supabase project
 
@@ -58,4 +58,8 @@ browsers and place an order to see it appear instantly.
   JPEG) and stored as base64 in the `products.images` jsonb column.
 - Seeded product images are static files in `public/products/` referenced as
   `/products/*.jpg`. If you host the built app under a subpath, update those paths.
-- The card payment form collects details for order records only — no payment is processed.
+- There is no online payment: checkout collects billing details, saves the order, and
+  opens WhatsApp with a prefilled order message addressed to the platform admin's number
+  (`public.admin_whatsapp()` in `supabase/schema.sql`, set per-admin under Profile →
+  Account details). If no admin number is set, orders fall back to the fallback number
+  in `src/lib/store.ts`.
