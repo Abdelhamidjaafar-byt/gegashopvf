@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Heart, LogOut, Menu, Moon, Search, ShieldCheck, ShoppingCart, Sun, User, Zap } from 'lucide-react'
+import { Heart, Instagram, LogOut, MapPin, Menu, Moon, Phone, Search, ShieldCheck, ShoppingCart, Sun, User, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { setLanguage } from '@/i18n'
+import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -44,6 +45,45 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
+      {/* Top contact & location bar */}
+      <div className="hidden border-b border-border/60 bg-secondary/40 text-xs text-muted-foreground sm:block">
+        <div className="mx-auto flex h-8 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <a
+              href={STORE_MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-volt transition-colors"
+            >
+              <MapPin className="h-3 w-3 text-volt" />
+              <span>{STORE_ADDRESS}</span>
+            </a>
+            <span>•</span>
+            <a
+              href={`https://wa.me/${FALLBACK_WHATSAPP}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-volt transition-colors"
+            >
+              <Phone className="h-3 w-3 text-volt" />
+              <span>{STORE_PHONE_DISPLAY}</span>
+            </a>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <a
+              href={STORE_INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 font-semibold hover:text-volt transition-colors"
+            >
+              <Instagram className="h-3 w-3 text-volt" />
+              <span>@electrogega</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-1.5 font-display text-lg font-bold tracking-tight">
           <Zap className="h-5 w-5 text-volt" strokeWidth={2.5} />
