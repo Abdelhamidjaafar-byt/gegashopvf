@@ -5,7 +5,45 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .light {
+    --volt: 154 75% 36%;
+    --volt-dim: 154 75% 28%;
+    --volt-fg: 0 0% 100%;
+    --background: 240 10% 98%;
+    --foreground: 240 10% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 9%;
+    --primary: 154 75% 36%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 93%;
+    --secondary-foreground: 240 10% 9%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 240 5% 92%;
+    --accent-foreground: 240 10% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 88%;
+    --input: 240 5% 88%;
+    --ring: 154 75% 36%;
+    --radius: 0.375rem;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 9%;
+    --sidebar-primary: 154 75% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 94%;
+    --sidebar-accent-foreground: 240 10% 9%;
+    --sidebar-border: 240 5% 88%;
+    --sidebar-ring: 154 75% 36%;
+  }
+
+  .dark {
+    --volt: 72 89% 58%;
+    --volt-dim: 72 89% 48%;
+    --volt-fg: 240 10% 4%;
     --background: 240 7% 5%;
     --foreground: 0 0% 96%;
     --card: 240 6% 8%;
@@ -25,7 +63,6 @@
     --border: 240 5% 15%;
     --input: 240 5% 18%;
     --ring: 72 89% 58%;
-    --radius: 0.375rem;
     --sidebar-background: 240 6% 8%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 72 89% 58%;
@@ -42,7 +79,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-200;
   }
   h1, h2, h3, h4, .font-display {
     font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
@@ -64,31 +101,31 @@
 /* Subtle grid texture for hero */
 .bg-grid {
   background-image:
-    linear-gradient(to right, hsl(240 5% 15% / 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(240 5% 15% / 0.5) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: hsl(240 7% 5%); }
-::-webkit-scrollbar-thumb { background: hsl(240 5% 18%); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(240 5% 25%); }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
 
 /* Volt range slider (dual-thumb price filter) */
 .volt-slider .relative {
   height: 0.375rem;
 }
 .volt-slider .bg-primary {
-  background-color: hsl(72 89% 58%);
+  background-color: hsl(var(--primary));
 }
 .volt-slider [data-slot='slider-thumb'],
 .volt-slider .block.h-4.w-4,
 .volt-slider [role='slider'] {
   border-radius: 9999px;
-  border: 2px solid hsl(72 89% 58%);
-  background-color: hsl(240 7% 5%);
-  box-shadow: 0 0 0 1px hsl(240 7% 5%);
+  border: 2px solid hsl(var(--primary));
+  background-color: hsl(var(--background));
+  box-shadow: 0 0 0 1px hsl(var(--background));
   transition: transform 0.15s ease;
 }
 .volt-slider [role='slider']:hover {
@@ -96,5 +133,5 @@
 }
 .volt-slider [role='slider']:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px hsl(72 89% 58% / 0.35);
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
 }

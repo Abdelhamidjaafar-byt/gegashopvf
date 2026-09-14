@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Heart, LogOut, Menu, Search, ShieldCheck, ShoppingCart, User, Zap } from 'lucide-react'
+import { Heart, LogOut, Menu, Moon, Search, ShieldCheck, ShoppingCart, Sun, User, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { setLanguage } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,7 @@ export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { user, isAdmin, signOut } = useAuth()
   const { count } = useCart()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -79,6 +81,17 @@ export default function Navbar() {
 
         <div className="ml-auto flex items-center gap-1 lg:ml-0">
           {langLinks}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            aria-label="Toggle Theme"
+            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            className="text-foreground hover:text-volt transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5 text-volt" /> : <Moon className="h-5 w-5 text-foreground" />}
+          </Button>
 
           <Button variant="ghost" size="icon" asChild className="relative">
             <Link to="/profile?tab=wishlist" aria-label={t('nav.wishlist')}>

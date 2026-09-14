@@ -10,9 +10,9 @@ module.exports = {
       },
       colors: {
         volt: {
-          DEFAULT: 'hsl(72 89% 58%)',
-          dim: 'hsl(72 89% 48%)',
-          fg: 'hsl(240 10% 4%)',
+          DEFAULT: 'hsl(var(--volt))',
+          dim: 'hsl(var(--volt-dim))',
+          fg: 'hsl(var(--volt-fg))',
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
