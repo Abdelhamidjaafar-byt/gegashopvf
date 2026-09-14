@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Layers, SlidersHorizontal } from 'lucide-react'
+import { Layers, SlidersHorizontal, Cpu } from 'lucide-react'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import ProductCard from '@/components/ProductCard'
 import { Input } from '@/components/ui/input'
@@ -33,6 +33,7 @@ export default function ShopPage() {
     const b = params.get('brand')
     return b && b !== 'all' ? [b] : []
   })
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({})
   const [sort, setSort] = useState<Sort>('newest')
   const [expanded, setExpanded] = useState<string[]>([])
   const featuredOnly = params.get('featured') === '1'
@@ -64,6 +65,35 @@ export default function ShopPage() {
     for (const child of childrenOf.get(category) || []) ids.add(child.id)
     return ids
   }, [category, childrenOf])
+
+  // Compute available spec keys & unique values for the selected category
+  const availableSpecs = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    const categoryProducts = selectedCatIds
+      ? products.filter((p) => p.category_id && selectedCatIds.has(p.category_id))
+      : products
+
+    for (const p of categoryProducts) {
+      if (!p.specs) continue
+      for (const [key, val] of Object.entries(p.specs)) {
+        if (!val || typeof val !== 'string' || !val.trim()) continue
+        const existing = map.get(key) || new Set<string>()
+        existing.add(val.trim())
+        map.set(key, existing)
+      }
+    }
+
+    const result: Array<{ key: string; values: string[] }> = []
+    for (const [key, valSet] of map.entries()) {
+      if (valSet.size > 0) {
+        result.push({
+          key,
+          values: Array.from(valSet).sort((a, b) => a.localeCompare(b)),
+        })
+      }
+    }
+    return result.sort((a, b) => a.key.localeCompare(b.key))
+  }, [products, selectedCatIds])
 
   // Auto-expand the branch of the category coming from the URL
   useEffect(() => {
@@ -114,8 +144,22 @@ export default function ShopPage() {
     )
   }
 
+  const toggleSpec = (specKey: string, val: string, checked: boolean | string) => {
+    setSelectedSpecs((prev) => {
+      const current = prev[specKey] || []
+      const updated = checked ? [...current, val] : current.filter((v) => v !== val)
+      if (updated.length === 0) {
+        const next = { ...prev }
+        delete next[specKey]
+        return next
+      }
+      return { ...prev, [specKey]: updated }
+    })
+  }
+
   const pickCategory = (id: string) => {
     setCategory(id)
+    setSelectedSpecs({}) // Reset spec filters when category changes
     if (id === 'all') return
     const cat = categories.find((c) => c.id === id)
     setExpanded((prev) => {
@@ -142,6 +186,18 @@ export default function ShopPage() {
     if (selectedCatIds) list = list.filter((p) => p.category_id && selectedCatIds.has(p.category_id))
     if (brandIds.length > 0) list = list.filter((p) => p.brand_id && brandIds.includes(p.brand_id))
     list = list.filter((p) => Number(p.price) >= minVal && Number(p.price) <= maxVal)
+
+    // Spec filters matching
+    for (const [specKey, selectedVals] of Object.entries(selectedSpecs)) {
+      if (selectedVals.length > 0) {
+        list = list.filter((p) => {
+          const productVal = p.specs?.[specKey]
+          if (!productVal) return false
+          return selectedVals.some((v) => productVal.toLowerCase().includes(v.toLowerCase()))
+        })
+      }
+    }
+
     switch (sort) {
       case 'price-asc':
         list.sort((a, b) => Number(a.price) - Number(b.price))
@@ -156,7 +212,7 @@ export default function ShopPage() {
         list.sort((a, b) => b.created_at.localeCompare(a.created_at))
     }
     return list
-  }, [products, q, selectedCatIds, brandIds, sort, minVal, maxVal, featuredOnly])
+  }, [products, q, selectedCatIds, brandIds, selectedSpecs, sort, minVal, maxVal, featuredOnly])
 
   const catButton = (
     id: string,
@@ -283,6 +339,48 @@ export default function ShopPage() {
               </span>
             </div>
           </div>
+
+          {/* Dynamic Specifications Filter */}
+          {availableSpecs.length > 0 && (
+            <div className="space-y-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
+                  <Cpu className="h-4 w-4 text-primary" /> {t('shop.specsFilter')}
+                </div>
+                {Object.keys(selectedSpecs).length > 0 && (
+                  <button
+                    onClick={() => setSelectedSpecs({})}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t('shop.clearSpecs')}
+                  </button>
+                )}
+              </div>
+
+              {availableSpecs.map((spec) => (
+                <div key={spec.key} className="space-y-1.5">
+                  <div className="text-xs font-semibold text-foreground/80">{spec.key}</div>
+                  <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                    {spec.values.map((val) => {
+                      const isChecked = selectedSpecs[spec.key]?.includes(val) || false
+                      return (
+                        <label
+                          key={val}
+                          className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => toggleSpec(spec.key, val, checked)}
+                          />
+                          <span className="truncate">{val}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
 
         {/* Grid */}

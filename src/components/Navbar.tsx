@@ -53,6 +53,10 @@ export default function Navbar() {
           <Link to="/shop" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {t('nav.shop')}
           </Link>
+          <Link to="/deals" className="flex items-center gap-1 text-sm font-semibold text-volt hover:text-volt-dim transition-colors">
+            <Zap className="h-3.5 w-3.5" />
+            {t('nav.deals', 'Deals')}
+          </Link>
           <Link to="/shop?featured=1" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {t('home.featured')}
           </Link>
@@ -144,6 +148,10 @@ export default function Navbar() {
               <nav className="mt-6 flex flex-col gap-4">
                 <Link to="/shop" onClick={() => setOpen(false)} className="text-lg font-medium">
                   {t('nav.shop')}
+                </Link>
+                <Link to="/deals" onClick={() => setOpen(false)} className="flex items-center gap-2 text-lg font-bold text-volt">
+                  <Zap className="h-4 w-4 text-volt" />
+                  {t('nav.deals', 'Deals & Offers')}
                 </Link>
                 <Link to="/shop?featured=1" onClick={() => setOpen(false)} className="text-lg font-medium">
                   {t('home.featured')}

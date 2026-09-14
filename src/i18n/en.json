@@ -10,7 +10,8 @@
     "admin": "Admin",
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "builder": "PC Builder"
+    "builder": "PC Builder",
+    "deals": "Deals & Offers"
   },
   "home": {
     "heroBadge": "New season drops are live",
@@ -46,7 +47,9 @@
     "outOfStock": "Out of stock",
     "allCategories": "All Categories",
     "allBrands": "All",
-    "allOf": "All"
+    "allOf": "All",
+    "specsFilter": "Specification Filters",
+    "clearSpecs": "Reset spec filters"
   },
   "product": {
     "addToCart": "Add to cart",
@@ -170,6 +173,7 @@
   "admin": {
     "title": "Admin hub",
     "products": "Products",
+    "offers": "Offers & Timers",
     "taxonomy": "Categories & brands",
     "orders": "Orders",
     "users": "Users",
@@ -181,8 +185,8 @@
     "category": "Category",
     "brand": "Brand",
     "description": "Description",
-    "specs": "Specifications (JSON)",
-    "specsHint": "e.g. {\"Display\":\"6.3 inch OLED\"}",
+    "specs": "Technical Specifications",
+    "specsSub": "Enter specification values for the selected category.",
     "images": "Images",
     "uploadImage": "Upload image",
     "imageHint": "Images are resized in your browser before upload.",

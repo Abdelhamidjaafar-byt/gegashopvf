@@ -4,32 +4,37 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import { ArrowRight, Zap } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
+import { useOffers } from '@/hooks/useOffers'
 import { formatPrice } from '@/lib/format'
-import type { Product } from '@/types'
+import type { Product, Offer } from '@/types'
 
-// Deal of the Day — the featured deal product with a live countdown to midnight.
-// Matches live DB id first, falls back to the demo-mode id.
-const DEAL_PRODUCT_IDS = ['d1000000-0000-4000-8000-000000000005', 'p5']
-const DISCOUNT = 0.25
+const DEFAULT_DEAL_IDS = ['d1000000-0000-4000-8000-000000000005', 'p5']
 
-function msUntilMidnight(): number {
-  const now = new Date()
-  const midnight = new Date(now)
-  midnight.setHours(24, 0, 0, 0)
-  return midnight.getTime() - now.getTime()
+function msUntilTarget(targetIso?: string): number {
+  if (!targetIso) {
+    const now = new Date()
+    const midnight = new Date(now)
+    midnight.setHours(24, 0, 0, 0)
+    return midnight.getTime() - now.getTime()
+  }
+  return new Date(targetIso).getTime() - Date.now()
 }
 
-function useCountdown() {
-  const [ms, setMs] = useState(msUntilMidnight)
+function useCountdown(targetIso?: string) {
+  const [ms, setMs] = useState(() => msUntilTarget(targetIso))
+
   useEffect(() => {
-    const timer = setInterval(() => setMs(msUntilMidnight()), 1000)
+    setMs(msUntilTarget(targetIso))
+    const timer = setInterval(() => setMs(msUntilTarget(targetIso)), 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [targetIso])
+
   const totalSec = Math.max(0, Math.floor(ms / 1000))
   return {
     h: Math.floor(totalSec / 3600),
     m: Math.floor((totalSec % 3600) / 60),
     s: totalSec % 60,
+    isExpired: totalSec <= 0,
   }
 }
 
@@ -47,16 +52,34 @@ function TimeCell({ value, label }: { value: number; label: string }) {
 export default function DealOfDay() {
   const { t, i18n } = useTranslation()
   const { products } = useProducts()
-  const { h, m, s } = useCountdown()
+  const { offers } = useOffers()
 
-  const product: Product | undefined = useMemo(
-    () => products.find((p) => DEAL_PRODUCT_IDS.includes(p.id)),
-    [products],
-  )
+  // Find active deal of the day from admin offers or active offers
+  const activeOffer: Offer | undefined = useMemo(() => {
+    const active = offers.filter((o) => o.is_active && new Date(o.end_time).getTime() > Date.now())
+    return active.find((o) => o.is_deal_of_day) || active[0]
+  }, [offers])
+
+  const product: Product | undefined = useMemo(() => {
+    if (activeOffer) {
+      const found = products.find((p) => p.id === activeOffer.product_id)
+      if (found) return found
+    }
+    return products.find((p) => DEFAULT_DEAL_IDS.includes(p.id)) || products[0]
+  }, [activeOffer, products])
+
+  const { h, m, s } = useCountdown(activeOffer?.end_time)
+
   if (!product) return null
 
-  const dealPrice = Math.round(Number(product.price) * (1 - DISCOUNT))
-  const soldPct = 68
+  const discountPercent = activeOffer ? activeOffer.discount_percent : 25
+  const dealPrice = activeOffer?.discounted_price
+    ? activeOffer.discounted_price
+    : Math.round(Number(product.price) * (1 - discountPercent / 100))
+  const soldPct = activeOffer ? activeOffer.claimed_percentage : 68
+  const badgeText = activeOffer ? activeOffer.badge : t('deal.badge')
+  const offerTitle = activeOffer ? activeOffer.title : product.name
+  const offerDesc = activeOffer?.description || product.description
 
   return (
     <section className="border-y border-border bg-card/60">
@@ -66,7 +89,7 @@ export default function DealOfDay() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-lg border border-volt/30 bg-background"
+          className="relative overflow-hidden rounded-lg border border-volt/30 bg-background shadow-xl"
         >
           <div className="bg-grid absolute inset-0 opacity-30" />
           <div className="absolute -left-20 -top-20 h-56 w-56 rounded-full bg-volt/10 blur-[80px]" />
@@ -74,10 +97,10 @@ export default function DealOfDay() {
             {/* Info */}
             <div className="flex flex-col justify-center">
               <span className="inline-flex w-fit items-center gap-1.5 border border-volt/40 bg-volt/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-volt">
-                <Zap className="h-3.5 w-3.5" /> {t('deal.badge')}
+                <Zap className="h-3.5 w-3.5" /> {badgeText}
               </span>
-              <h2 className="mt-4 font-display text-3xl font-bold md:text-4xl">{product.name}</h2>
-              <p className="mt-2 line-clamp-2 max-w-md text-sm text-muted-foreground">{product.description}</p>
+              <h2 className="mt-4 font-display text-3xl font-bold md:text-4xl">{offerTitle}</h2>
+              <p className="mt-2 line-clamp-2 max-w-md text-sm text-muted-foreground">{offerDesc}</p>
 
               <div className="mt-5 flex items-end gap-3">
                 <span className="font-display text-4xl font-bold text-volt">{formatPrice(dealPrice, i18n.language)}</span>
@@ -85,7 +108,7 @@ export default function DealOfDay() {
                   {formatPrice(Number(product.price), i18n.language)}
                 </span>
                 <span className="mb-1 rounded-sm bg-volt px-2 py-0.5 text-xs font-bold text-volt-fg">
-                  -{Math.round(DISCOUNT * 100)}%
+                  -{discountPercent}%
                 </span>
               </div>
 
@@ -127,7 +150,7 @@ export default function DealOfDay() {
             <Link to={`/product/${product.id}`} className="group relative flex items-center justify-center">
               <div className="absolute h-48 w-48 rounded-full bg-volt/15 blur-[70px] transition-opacity group-hover:opacity-100 md:h-64 md:w-64" />
               <motion.img
-                src={product.images[0]}
+                src={product.images && product.images[0] ? product.images[0] : ''}
                 alt={product.name}
                 className="relative max-h-72 w-auto rounded-md object-contain transition-transform duration-500 group-hover:scale-105"
                 initial={{ opacity: 0, rotate: -3, scale: 0.9 }}

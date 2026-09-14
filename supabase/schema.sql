@@ -275,6 +275,40 @@ do $$ begin
   alter publication supabase_realtime add table public.orders;
 exception when duplicate_object then null; end $$;
 
+create table if not exists public.offers (
+  id                 uuid primary key default gen_random_uuid(),
+  title              text not null,
+  badge              text not null default 'Flash Sale',
+  description        text not null default '',
+  product_id         uuid not null references public.products(id) on delete cascade,
+  discount_percent   integer not null check (discount_percent >= 0 and discount_percent <= 100),
+  discounted_price   numeric(10,2),
+  start_time         timestamptz not null default now(),
+  end_time           timestamptz not null,
+  claimed_percentage integer not null default 50 check (claimed_percentage >= 0 and claimed_percentage <= 100),
+  is_deal_of_day     boolean not null default false,
+  is_active          boolean not null default true,
+  created_at         timestamptz not null default now()
+);
+
+create index if not exists offers_product_idx on public.offers(product_id);
+create index if not exists offers_active_end_idx on public.offers(is_active, end_time);
+
+alter table public.offers enable row level security;
+
+drop policy if exists offers_read on public.offers;
+create policy offers_read on public.offers for select using (true);
+drop policy if exists offers_write on public.offers;
+create policy offers_write on public.offers for insert with check (public.is_admin());
+drop policy if exists offers_update on public.offers;
+create policy offers_update on public.offers for update using (public.is_admin());
+drop policy if exists offers_delete on public.offers;
+create policy offers_delete on public.offers for delete using (public.is_admin());
+
+do $$ begin
+  alter publication supabase_realtime add table public.offers;
+exception when duplicate_object then null; end $$;
+
 -- ---------- WhatsApp order handoff ----------
 -- Returns the platform admin's WhatsApp number (digits only), used at
 -- checkout to route orders. Admins set their number in Profile.
@@ -291,3 +325,4 @@ as $$
 $$;
 
 grant execute on function public.admin_whatsapp() to anon, authenticated;
+

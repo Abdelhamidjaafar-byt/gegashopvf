@@ -96,6 +96,23 @@ export interface Review {
   author?: string
 }
 
+export interface Offer {
+  id: string
+  title: string
+  badge: string
+  description?: string
+  product_id: string
+  discount_percent: number
+  discounted_price?: number
+  start_time: string
+  end_time: string
+  claimed_percentage: number
+  is_deal_of_day: boolean
+  is_active: boolean
+  created_at?: string
+  product?: Product
+}
+
 export const SHIPPING_OPTIONS: Record<
   ShippingMethod,
   { label: string; eta: string; price: number; freeOver?: number }
@@ -103,3 +120,4 @@ export const SHIPPING_OPTIONS: Record<
   cathedis_standard: { label: 'Cathedis Standard', eta: '2–4 days', price: 35, freeOver: 500 },
   cathedis_express: { label: 'Cathedis Express', eta: '24 h', price: 60 },
 }
+

@@ -10,7 +10,8 @@
     "admin": "Admin",
     "signIn": "Se connecter",
     "signOut": "Se déconnecter",
-    "builder": "Configurateur PC"
+    "builder": "Configurateur PC",
+    "deals": "Offres & Promos"
   },
   "home": {
     "heroBadge": "Les nouveautés sont arrivées",
@@ -46,7 +47,9 @@
     "outOfStock": "Rupture de stock",
     "allCategories": "Toutes les catégories",
     "allBrands": "Tous",
-    "allOf": "Tout"
+    "allOf": "Tout",
+    "specsFilter": "Filtre par caractéristiques",
+    "clearSpecs": "Réinitialiser les caractéristiques"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -170,6 +173,7 @@
   "admin": {
     "title": "Espace admin",
     "products": "Produits",
+    "offers": "Offres & Minuteurs",
     "taxonomy": "Catégories & marques",
     "orders": "Commandes",
     "users": "Utilisateurs",
@@ -181,8 +185,8 @@
     "category": "Catégorie",
     "brand": "Marque",
     "description": "Description",
-    "specs": "Caractéristiques (JSON)",
-    "specsHint": "ex. {\"Écran\":\"OLED 6,3 pouces\"}",
+    "specs": "Caractéristiques techniques",
+    "specsSub": "Saisissez les caractéristiques selon la catégorie sélectionnée.",
     "images": "Images",
     "uploadImage": "Téléverser une image",
     "imageHint": "Les images sont redimensionnées dans votre navigateur avant l'envoi.",

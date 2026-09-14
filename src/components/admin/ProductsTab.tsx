@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import { fileToResizedDataUrl } from '@/lib/image'
 import { formatPrice } from '@/lib/format'
-import type { Product } from '@/types'
+import type { Category, Product } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +18,53 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 
+const CATEGORY_STATIC_SPECS: Record<string, string[]> = {
+  laptops: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
+  computers: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
+  pc: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
+  phones: ['Écran', 'Processeur', 'Mémoire RAM', 'Stockage', 'Appareil Photo Principal', 'Appareil Photo Frontal', 'Batterie', 'Système d\'exploitation', 'Réseau & SIM', 'Garantie'],
+  smartphones: ['Écran', 'Processeur', 'Mémoire RAM', 'Stockage', 'Appareil Photo Principal', 'Appareil Photo Frontal', 'Batterie', 'Système d\'exploitation', 'Réseau & SIM', 'Garantie'],
+  tablets: ['Écran', 'Processeur', 'Mémoire RAM', 'Stockage', 'Appareil Photo Principal', 'Appareil Photo Frontal', 'Batterie', 'Système d\'exploitation', 'Réseau & SIM', 'Garantie'],
+  components: ['Socket / Compatibilité', 'Vitesse / Fréquence', 'Format (Form Factor)', 'Consommation (TDP)', 'Interface / Connectique', 'Garantie'],
+  composants: ['Socket / Compatibilité', 'Vitesse / Fréquence', 'Format (Form Factor)', 'Consommation (TDP)', 'Interface / Connectique', 'Garantie'],
+  cpus: ['Socket / Compatibilité', 'Nombre de cœurs / Threads', 'Fréquence Base / Boost', 'Cache', 'Consommation (TDP)', 'Garantie'],
+  gpus: ['Mémoire VRAM', 'Interface / Bus', 'Connecteurs d\'alimentation', 'Puissance conseillée (PSU)', 'Connectiques Vidéo', 'Garantie'],
+  ram: ['Capacité', 'Technologie (DDR4/DDR5)', 'Fréquence (MHz)', 'Cas Latency (CL)', 'Garantie'],
+  storage: ['Type (NVMe SSD / SATA / HDD)', 'Capacité', 'Vitesse Lecture / Écriture', 'Format', 'Garantie'],
+  audio: ['Type', 'Connectivité (Bluetooth/Filaire)', 'Autonomie Batterie', 'Réduction de bruit (ANC)', 'Réponse en fréquence', 'Garantie'],
+  casques: ['Type', 'Connectivité (Bluetooth/Filaire)', 'Autonomie Batterie', 'Réduction de bruit (ANC)', 'Réponse en fréquence', 'Garantie'],
+  gaming: ['Type de connexion', 'Capteur / DPI', 'Switchs (Clavier)', 'Éclairage RGB', 'Compatibilité', 'Garantie'],
+  accessories: ['Type de connexion', 'Capteur / DPI', 'Switchs (Clavier)', 'Éclairage RGB', 'Compatibilité', 'Garantie'],
+  default: ['Couleur', 'Dimensions', 'Poids', 'Garantie'],
+}
+
+function getStaticSpecsForCategory(categoryId: string, categories: Category[]): string[] {
+  if (!categoryId) return CATEGORY_STATIC_SPECS.default
+  const cat = categories.find((c) => c.id === categoryId)
+  if (!cat) return CATEGORY_STATIC_SPECS.default
+
+  const slugName = (cat.slug + ' ' + cat.name).toLowerCase()
+  for (const key of Object.keys(CATEGORY_STATIC_SPECS)) {
+    if (key !== 'default' && slugName.includes(key)) {
+      return CATEGORY_STATIC_SPECS[key]
+    }
+  }
+
+  if (cat.parent_id) {
+    const parent = categories.find((c) => c.id === cat.parent_id)
+    if (parent) {
+      const parentSlugName = (parent.slug + ' ' + parent.name).toLowerCase()
+      for (const key of Object.keys(CATEGORY_STATIC_SPECS)) {
+        if (key !== 'default' && parentSlugName.includes(key)) {
+          return CATEGORY_STATIC_SPECS[key]
+        }
+      }
+    }
+  }
+
+  return CATEGORY_STATIC_SPECS.default
+}
+
 interface FormState {
   id?: string
   name: string
@@ -27,13 +74,13 @@ interface FormState {
   category_id: string
   brand_id: string
   images: string[]
-  specsText: string
+  specsValues: Record<string, string>
   is_featured: boolean
 }
 
 const emptyForm: FormState = {
   name: '', description: '', price: '', stock: '', category_id: '', brand_id: '',
-  images: [], specsText: '{}', is_featured: false,
+  images: [], specsValues: {}, is_featured: false,
 }
 
 export default function ProductsTab() {
@@ -61,7 +108,7 @@ export default function ProductsTab() {
       category_id: p.category_id || '',
       brand_id: p.brand_id || '',
       images: [...p.images],
-      specsText: JSON.stringify(p.specs || {}, null, 2),
+      specsValues: { ...(p.specs || {}) },
       is_featured: p.is_featured,
     })
     setOpen(true)
@@ -80,12 +127,11 @@ export default function ProductsTab() {
   }
 
   const save = async () => {
-    let specs: Record<string, string>
-    try {
-      specs = JSON.parse(form.specsText || '{}')
-    } catch {
-      toast.error(t('admin.specsHint'))
-      return
+    const specs: Record<string, string> = {}
+    for (const [k, v] of Object.entries(form.specsValues)) {
+      if (v && v.trim()) {
+        specs[k] = v.trim()
+      }
     }
     const payload = {
       name: form.name,
@@ -123,6 +169,9 @@ export default function ProductsTab() {
     toast.success(t('common.deleted'))
     refetch()
   }
+
+  const currentCategorySpecs = getStaticSpecsForCategory(form.category_id, categories)
+  const allSpecKeys = Array.from(new Set([...currentCategorySpecs, ...Object.keys(form.specsValues || {})]))
 
   return (
     <div>
@@ -221,16 +270,32 @@ export default function ProductsTab() {
               <Label>{t('admin.description')}</Label>
               <Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5 bg-secondary" />
             </div>
-            <div className="sm:col-span-2">
-              <Label>{t('admin.specs')}</Label>
-              <Textarea
-                rows={4}
-                value={form.specsText}
-                onChange={(e) => setForm({ ...form, specsText: e.target.value })}
-                className="mt-1.5 bg-secondary font-mono text-xs"
-                placeholder={t('admin.specsHint')}
-              />
+
+            {/* Static Specs based on Category */}
+            <div className="sm:col-span-2 rounded-md border border-border bg-secondary/30 p-4 space-y-3">
+              <div>
+                <Label className="font-display font-bold text-sm">{t('admin.specs')}</Label>
+                <p className="text-xs text-muted-foreground">{t('admin.specsSub')}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {allSpecKeys.map((specKey) => (
+                  <div key={specKey}>
+                    <Label htmlFor={`spec-${specKey}`} className="text-xs font-semibold text-foreground">{specKey}</Label>
+                    <Input
+                      id={`spec-${specKey}`}
+                      value={form.specsValues[specKey] || ''}
+                      onChange={(e) => setForm((f) => ({
+                        ...f,
+                        specsValues: { ...f.specsValues, [specKey]: e.target.value }
+                      }))}
+                      placeholder="..."
+                      className="mt-1 bg-background text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
+
             <div className="sm:col-span-2">
               <Label>{t('admin.images')}</Label>
               <div className="mt-1.5 flex flex-wrap items-center gap-3">

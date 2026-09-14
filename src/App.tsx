@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import HomePage from '@/pages/HomePage'
 import ShopPage from '@/pages/ShopPage'
+import DealsPage from '@/pages/DealsPage'
 import BuilderPage from '@/pages/BuilderPage'
 import ProductPage from '@/pages/ProductPage'
 import CartPage from '@/pages/CartPage'
@@ -28,7 +29,9 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/shop" element={<ShopPage />} />
+                <Route path="/deals" element={<DealsPage />} />
                 <Route path="/builder" element={<BuilderPage />} />
+
                 <Route path="/product/:id" element={<ProductPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />

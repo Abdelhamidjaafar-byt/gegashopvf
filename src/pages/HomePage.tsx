@@ -1,12 +1,14 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
-import { ArrowRight, CircuitBoard, Cpu, Gamepad2, Headphones, House, Laptop, Monitor, MousePointer, Smartphone, Wrench } from 'lucide-react'
+import { ArrowRight, CircuitBoard, Cpu, Gamepad2, Headphones, House, Laptop, Monitor, MousePointer, Smartphone, Wrench, Zap } from 'lucide-react'
 import { useProducts, useCategories } from '@/hooks/useCatalog'
 import ProductCard from '@/components/ProductCard'
 import BrandCarousel from '@/components/BrandCarousel'
 import DealOfDay from '@/components/DealOfDay'
+import OffersCollection from '@/components/OffersCollection'
 import { Skeleton } from '@/components/ui/skeleton'
+
 
 const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   smartphones: Smartphone,
@@ -63,10 +65,10 @@ export default function HomePage() {
                 {t('home.shopNow')} <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                to="/shop?featured=1"
-                className="inline-flex items-center gap-2 border border-border px-6 py-3 text-sm font-semibold uppercase tracking-wide transition-colors hover:border-volt hover:text-volt"
+                to="/deals"
+                className="inline-flex items-center gap-2 border border-volt/60 bg-volt/10 px-6 py-3 text-sm font-bold uppercase tracking-wide text-volt transition-colors hover:bg-volt hover:text-volt-fg"
               >
-                {t('home.featured')}
+                <Zap className="h-4 w-4" /> Deals & Offers
               </Link>
             </div>
           </motion.div>
@@ -76,6 +78,8 @@ export default function HomePage() {
       <BrandCarousel />
 
       <DealOfDay />
+
+      <OffersCollection />
 
       {/* Featured */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
