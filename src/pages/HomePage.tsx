@@ -39,11 +39,11 @@ export default function HomePage() {
           muted
           loop
           playsInline
-          className="absolute inset-0 h-full w-full object-cover opacity-40"
+          className="absolute inset-0 h-full w-full object-cover opacity-90"
           src="hero.mp4"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-        <div className="bg-grid absolute inset-0 opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#e5e7eb]/90 via-[#e5e7eb]/60 to-transparent dark:from-background/80 dark:via-background/40" />
+        <div className="bg-grid absolute inset-0 opacity-20 pointer-events-none" />
         <div className="absolute -left-32 top-1/3 h-72 w-72 rounded-full bg-volt/10 blur-[100px]" />
         <div className="absolute -right-24 top-10 h-60 w-60 rounded-full bg-volt/5 blur-[80px]" />
         <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32">

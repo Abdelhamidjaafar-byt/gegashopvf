@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Layers, SlidersHorizontal, Cpu } from 'lucide-react'
+import { Layers, SlidersHorizontal, Cpu, ChevronDown, ChevronUp } from 'lucide-react'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import ProductCard from '@/components/ProductCard'
 import { Input } from '@/components/ui/input'
@@ -34,6 +34,7 @@ export default function ShopPage() {
     return b && b !== 'all' ? [b] : []
   })
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string[]>>({})
+  const [isSpecsOpen, setIsSpecsOpen] = useState(false)
   const [sort, setSort] = useState<Sort>('newest')
   const [expanded, setExpanded] = useState<string[]>([])
   const featuredOnly = params.get('featured') === '1'
@@ -95,9 +96,14 @@ export default function ShopPage() {
     return result.sort((a, b) => a.key.localeCompare(b.key))
   }, [products, selectedCatIds])
 
-  // Auto-expand the branch of the category coming from the URL
+  // Auto-expand the branch of the category coming from the URL & toggle specs filter
   useEffect(() => {
-    if (category === 'all') return
+    if (category === 'all') {
+      setIsSpecsOpen(false)
+      setSelectedSpecs({})
+      return
+    }
+    setIsSpecsOpen(true)
     const current = categories.find((c) => c.id === category)
     setExpanded((prev) => {
       const next = new Set(prev)
@@ -340,14 +346,24 @@ export default function ShopPage() {
             </div>
           </div>
 
-          {/* Dynamic Specifications Filter */}
-          {availableSpecs.length > 0 && (
-            <div className="space-y-4 pt-4 border-t border-border">
+          {/* Dynamic Specifications Filter — Collapsed until a category is chosen */}
+          {category !== 'all' && availableSpecs.length > 0 && (
+            <div className="space-y-3 pt-4 border-t border-border">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
-                  <Cpu className="h-4 w-4 text-primary" /> {t('shop.specsFilter')}
-                </div>
-                {Object.keys(selectedSpecs).length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsSpecsOpen(!isSpecsOpen)}
+                  className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide hover:text-primary transition-colors text-left"
+                >
+                  <Cpu className="h-4 w-4 text-primary" />
+                  <span>{t('shop.specsFilter')}</span>
+                  {isSpecsOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
+                  )}
+                </button>
+                {Object.keys(selectedSpecs).length > 0 && isSpecsOpen && (
                   <button
                     onClick={() => setSelectedSpecs({})}
                     className="text-xs text-primary hover:underline"
@@ -357,28 +373,32 @@ export default function ShopPage() {
                 )}
               </div>
 
-              {availableSpecs.map((spec) => (
-                <div key={spec.key} className="space-y-1.5">
-                  <div className="text-xs font-semibold text-foreground/80">{spec.key}</div>
-                  <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                    {spec.values.map((val) => {
-                      const isChecked = selectedSpecs[spec.key]?.includes(val) || false
-                      return (
-                        <label
-                          key={val}
-                          className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        >
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={(checked) => toggleSpec(spec.key, val, checked)}
-                          />
-                          <span className="truncate">{val}</span>
-                        </label>
-                      )
-                    })}
-                  </div>
+              {isSpecsOpen && (
+                <div className="space-y-4 pt-1">
+                  {availableSpecs.map((spec) => (
+                    <div key={spec.key} className="space-y-1.5">
+                      <div className="text-xs font-semibold text-foreground/80">{spec.key}</div>
+                      <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                        {spec.values.map((val) => {
+                          const isChecked = selectedSpecs[spec.key]?.includes(val) || false
+                          return (
+                            <label
+                              key={val}
+                              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            >
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={(checked) => toggleSpec(spec.key, val, checked)}
+                              />
+                              <span className="truncate">{val}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </aside>

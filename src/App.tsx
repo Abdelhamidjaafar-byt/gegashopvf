@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/contexts/WishlistContext'
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import WhatsAppBubble from '@/components/WhatsAppBubble'
 import HomePage from '@/pages/HomePage'
 import ShopPage from '@/pages/ShopPage'
 import DealsPage from '@/pages/DealsPage'
@@ -43,6 +44,7 @@ function AppContent() {
         </Routes>
       </main>
       <Footer />
+      <WhatsAppBubble />
       <Toaster position="bottom-right" theme={theme === 'dark' ? 'dark' : 'light'} />
     </div>
   )
