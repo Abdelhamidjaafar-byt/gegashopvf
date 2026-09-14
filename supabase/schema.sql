@@ -237,8 +237,11 @@ drop policy if exists orders_select on public.orders;
 create policy orders_select on public.orders
   for select using (auth.uid() = user_id or public.is_admin());
 drop policy if exists orders_admin_update on public.orders;
-create policy orders_admin_update on public.orders
-  for update using (public.is_admin());
+drop policy if exists orders_update on public.orders;
+create policy orders_update on public.orders
+  for update using (auth.uid() = user_id or public.is_admin())
+  with check (auth.uid() = user_id or public.is_admin());
+
 
 -- reviews: public read; authenticated users manage their own
 drop policy if exists reviews_read on public.reviews;

@@ -1,12 +1,13 @@
 import { Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Radio, ShieldCheck } from 'lucide-react'
+import { Settings, ShieldCheck, Radio } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProductsTab from '@/components/admin/ProductsTab'
 import TaxonomyTab from '@/components/admin/TaxonomyTab'
 import OrdersTab from '@/components/admin/OrdersTab'
 import UsersTab from '@/components/admin/UsersTab'
+import SettingsTab from '@/components/admin/SettingsTab'
 
 export default function AdminPage() {
   const { t } = useTranslation()
@@ -32,11 +33,16 @@ export default function AdminPage() {
           <TabsTrigger value="taxonomy">{t('admin.taxonomy')}</TabsTrigger>
           <TabsTrigger value="orders">{t('admin.orders')}</TabsTrigger>
           <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-1.5">
+            <Settings className="h-3.5 w-3.5" />
+            {t('admin.settings')}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
         <TabsContent value="taxonomy" className="mt-6"><TaxonomyTab /></TabsContent>
         <TabsContent value="orders" className="mt-6"><OrdersTab /></TabsContent>
         <TabsContent value="users" className="mt-6"><UsersTab /></TabsContent>
+        <TabsContent value="settings" className="mt-6"><SettingsTab /></TabsContent>
       </Tabs>
     </div>
   )

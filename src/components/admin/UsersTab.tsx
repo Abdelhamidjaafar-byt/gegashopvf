@@ -50,6 +50,7 @@ export default function UsersTab() {
         <TableHeader>
           <TableRow>
             <TableHead>{t('admin.user')}</TableHead>
+            <TableHead>{t('checkout.phone')}</TableHead>
             <TableHead>{t('admin.date')}</TableHead>
             <TableHead>{t('admin.role')}</TableHead>
             <TableHead className="w-40"></TableHead>
@@ -61,6 +62,9 @@ export default function UsersTab() {
               <TableCell>
                 <p className="text-sm font-medium">{u.display_name || '—'}</p>
                 <p className="text-xs text-muted-foreground">{u.email}</p>
+              </TableCell>
+              <TableCell className="font-mono text-xs text-muted-foreground">
+                {u.phone || '—'}
               </TableCell>
               <TableCell className="text-sm">{formatDate(u.created_at, i18n.language)}</TableCell>
               <TableCell>

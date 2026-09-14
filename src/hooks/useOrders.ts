@@ -24,10 +24,24 @@ export function useMyOrders(userId: string | undefined) {
 
   useEffect(() => {
     refetch()
-  }, [refetch])
+    if (!userId) return
+    const client = supabase
+    const channel = client
+      .channel(channelName(`my-orders-${userId}`))
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+        () => refetch(),
+      )
+      .subscribe()
+    return () => {
+      client.removeChannel(channel)
+    }
+  }, [refetch, userId])
 
-  return { orders, loading, refetch }
+  return { orders, loading, refetch, setOrders }
 }
+
 
 /** All orders — admin only (RLS enforces this server-side too). Realtime enabled. */
 export function useAllOrders(enabled: boolean) {
@@ -76,3 +90,8 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
   const { error } = await supabase.from('orders').update({ status }).eq('id', orderId)
   return { error: error?.message }
 }
+
+export async function cancelOrder(orderId: string) {
+  return updateOrderStatus(orderId, 'cancelled')
+}
+
