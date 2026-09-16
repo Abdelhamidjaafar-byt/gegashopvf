@@ -326,3 +326,25 @@ $$;
 
 grant execute on function public.admin_whatsapp() to anon, authenticated;
 
+-- ---------- Site Settings ----------
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.site_settings enable row level security;
+
+drop policy if exists site_settings_read on public.site_settings;
+create policy site_settings_read on public.site_settings for select using (true);
+drop policy if exists site_settings_write on public.site_settings;
+create policy site_settings_write on public.site_settings for insert with check (public.is_admin());
+drop policy if exists site_settings_update on public.site_settings;
+create policy site_settings_update on public.site_settings for update using (public.is_admin());
+drop policy if exists site_settings_delete on public.site_settings;
+create policy site_settings_delete on public.site_settings for delete using (public.is_admin());
+
+do $$ begin
+  alter publication supabase_realtime add table public.site_settings;
+exception when duplicate_object then null; end $$;
+

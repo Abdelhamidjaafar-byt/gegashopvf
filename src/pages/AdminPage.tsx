@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Settings, ShieldCheck, Radio, Zap } from 'lucide-react'
+import { Settings, ShieldCheck, Radio, Zap, Video } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProductsTab from '@/components/admin/ProductsTab'
@@ -8,6 +8,7 @@ import TaxonomyTab from '@/components/admin/TaxonomyTab'
 import OrdersTab from '@/components/admin/OrdersTab'
 import UsersTab from '@/components/admin/UsersTab'
 import OffersTab from '@/components/admin/OffersTab'
+import HeroTab from '@/components/admin/HeroTab'
 import SettingsTab from '@/components/admin/SettingsTab'
 
 export default function AdminPage() {
@@ -35,6 +36,10 @@ export default function AdminPage() {
             <Zap className="h-3.5 w-3.5 text-volt" />
             {t('admin.offers', 'Offers & Timers')}
           </TabsTrigger>
+          <TabsTrigger value="hero" className="flex items-center gap-1.5 font-semibold">
+            <Video className="h-3.5 w-3.5 text-volt" />
+            {t('admin.hero', 'Hero & Banners')}
+          </TabsTrigger>
           <TabsTrigger value="taxonomy">{t('admin.taxonomy')}</TabsTrigger>
           <TabsTrigger value="orders">{t('admin.orders')}</TabsTrigger>
           <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
@@ -45,6 +50,7 @@ export default function AdminPage() {
         </TabsList>
         <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
         <TabsContent value="offers" className="mt-6"><OffersTab /></TabsContent>
+        <TabsContent value="hero" className="mt-6"><HeroTab /></TabsContent>
         <TabsContent value="taxonomy" className="mt-6"><TaxonomyTab /></TabsContent>
         <TabsContent value="orders" className="mt-6"><OrdersTab /></TabsContent>
         <TabsContent value="users" className="mt-6"><UsersTab /></TabsContent>
@@ -53,4 +59,5 @@ export default function AdminPage() {
     </div>
   )
 }
+
 

@@ -49,7 +49,8 @@
     "allBrands": "Tous",
     "allOf": "Tout",
     "specsFilter": "Filtre par caractéristiques",
-    "clearSpecs": "Réinitialiser les caractéristiques"
+    "clearSpecs": "Réinitialiser les caractéristiques",
+    "clearAll": "Réinitialiser tous les filtres"
   },
   "product": {
     "addToCart": "Ajouter au panier",
@@ -174,6 +175,7 @@
     "title": "Espace admin",
     "products": "Produits",
     "offers": "Offres & Minuteurs",
+    "hero": "Hero & Bannières",
     "taxonomy": "Catégories & marques",
     "orders": "Commandes",
     "users": "Utilisateurs",
