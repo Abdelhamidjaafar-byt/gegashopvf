@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
+import { ExternalLink, Eye, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
@@ -17,6 +18,17 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { StockBadge } from '@/components/ProductCard'
 
 const CATEGORY_STATIC_SPECS: Record<string, string[]> = {
   laptops: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
@@ -98,6 +110,9 @@ export default function ProductsTab() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
+  const [previewImageIdx, setPreviewImageIdx] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const openNew = () => {
@@ -219,9 +234,10 @@ export default function ProductsTab() {
     refetch()
   }
 
-  const remove = async (id: string) => {
-    if (!confirm(t('admin.confirmDelete'))) return
-    const { error } = await supabase.from('products').delete().eq('id', id)
+  const confirmRemove = async () => {
+    if (!deleteTargetId) return
+    const { error } = await supabase.from('products').delete().eq('id', deleteTargetId)
+    setDeleteTargetId(null)
     if (error) {
       toast.error(error.message)
       return
@@ -246,12 +262,19 @@ export default function ProductsTab() {
               <TableHead>{t('admin.name')}</TableHead>
               <TableHead>{t('admin.price')}</TableHead>
               <TableHead>{t('admin.stock')}</TableHead>
-              <TableHead className="w-24"></TableHead>
+              <TableHead className="w-28"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.map((p) => (
-              <TableRow key={p.id}>
+              <TableRow
+                key={p.id}
+                onClick={() => {
+                  setPreviewProduct(p)
+                  setPreviewImageIdx(0)
+                }}
+                className="cursor-pointer hover:bg-secondary/60 transition-colors"
+              >
                 <TableCell>
                   <div className="h-10 w-10 overflow-hidden rounded bg-secondary">
                     {p.images[0] && <img src={p.images[0]} alt="" className="h-full w-full object-cover" />}
@@ -263,12 +286,29 @@ export default function ProductsTab() {
                 </TableCell>
                 <TableCell>{formatPrice(Number(p.price), i18n.language)}</TableCell>
                 <TableCell>{p.stock}</TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setPreviewProduct(p)
+                        setPreviewImageIdx(0)
+                      }}
+                      title={t('admin.previewProduct')}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => remove(p.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDeleteTargetId(p.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -440,6 +480,143 @@ export default function ProductsTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Product Preview Modal */}
+      <Dialog open={Boolean(previewProduct)} onOpenChange={(o) => !o && setPreviewProduct(null)}>
+        {previewProduct && (
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-4 pr-6">
+                <DialogTitle className="font-display text-xl font-bold flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-volt" />
+                  {t('admin.previewProduct')}
+                </DialogTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const prod = previewProduct
+                      setPreviewProduct(null)
+                      openEdit(prod)
+                    }}
+                    className="h-8 text-xs font-semibold"
+                  >
+                    <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                    {t('admin.edit')}
+                  </Button>
+                  <Button variant="secondary" size="sm" asChild className="h-8 text-xs font-semibold">
+                    <Link to={`/product/${previewProduct.id}`} target="_blank">
+                      <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                      {t('admin.viewInStore')}
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="grid gap-6 md:grid-cols-2 mt-2">
+              {/* Gallery */}
+              <div>
+                <div className="aspect-square overflow-hidden rounded-md border border-border bg-secondary">
+                  {previewProduct.images[previewImageIdx] ? (
+                    <img
+                      src={previewProduct.images[previewImageIdx]}
+                      alt={previewProduct.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center font-display text-4xl font-bold text-muted-foreground/30">
+                      {previewProduct.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                {previewProduct.images.length > 1 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {previewProduct.images.map((src, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setPreviewImageIdx(i)}
+                        className={`h-14 w-14 shrink-0 overflow-hidden rounded border transition-colors ${
+                          i === previewImageIdx ? 'border-volt ring-1 ring-volt' : 'border-border'
+                        }`}
+                      >
+                        <img src={src} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="flex flex-col gap-3">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {brands.find((b) => b.id === previewProduct.brand_id)?.name}
+                    {previewProduct.category_id &&
+                      ` · ${categories.find((c) => c.id === previewProduct.category_id)?.name}`}
+                  </div>
+                  <h2 className="mt-1 font-display text-2xl font-bold">{previewProduct.name}</h2>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="font-display text-2xl font-bold text-volt">
+                    {formatPrice(Number(previewProduct.price), i18n.language)}
+                  </span>
+                  <StockBadge stock={previewProduct.stock} />
+                  {previewProduct.is_featured && (
+                    <span className="rounded-full bg-volt/20 px-2 py-0.5 text-xs font-semibold text-volt border border-volt/40">
+                      ★ {t('admin.featured')}
+                    </span>
+                  )}
+                </div>
+
+                {previewProduct.description && (
+                  <p className="text-sm leading-relaxed text-muted-foreground bg-secondary/30 p-3 rounded-md border border-border/50">
+                    {previewProduct.description}
+                  </p>
+                )}
+
+                {/* Specs */}
+                {Object.keys(previewProduct.specs || {}).length > 0 && (
+                  <div className="mt-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                      {t('admin.specs')}
+                    </h4>
+                    <div className="max-h-48 overflow-y-auto rounded-md border border-border divide-y divide-border text-xs bg-secondary/20">
+                      {Object.entries(previewProduct.specs).map(([k, v]) => (
+                        <div key={k} className="grid grid-cols-3 gap-2 px-3 py-1.5">
+                          <span className="font-semibold text-foreground/80">{k}</span>
+                          <span className="col-span-2 text-muted-foreground tabular-nums">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Delete Confirmation Alert Pop-Up */}
+      <AlertDialog open={Boolean(deleteTargetId)} onOpenChange={(o) => !o && setDeleteTargetId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin.confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('admin.confirmDeleteDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('admin.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemove}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              {t('admin.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

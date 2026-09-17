@@ -17,6 +17,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import ProductCard from '@/components/ProductCard'
 import { StatusBadge } from '@/components/StatusBadge'
 
@@ -45,6 +55,7 @@ export default function ProfilePage() {
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -53,12 +64,19 @@ export default function ProfilePage() {
     }
   }, [user])
 
-  const handleCancelOrder = async (orderId: string) => {
+  const requestCancelOrder = (orderId: string) => {
     const targetOrder = orders.find((o) => o.id === orderId) || selectedOrder
-    const shortId = '#' + orderId.slice(0, 8).toUpperCase()
-    if (!window.confirm(t('profile.confirmCancelOrder', { id: shortId }))) {
-      return
+    if (targetOrder) {
+      setOrderToCancel(targetOrder)
     }
+  }
+
+  const confirmCancelOrderAction = async () => {
+    if (!orderToCancel) return
+    const orderId = orderToCancel.id
+    const targetOrder = orderToCancel
+    const shortId = '#' + orderId.slice(0, 8).toUpperCase()
+    setOrderToCancel(null)
 
     // Optimistically update order status to 'cancelled' in local UI state immediately
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'cancelled' } : o)))
@@ -271,7 +289,7 @@ export default function ProfilePage() {
                           variant="destructive"
                           size="sm"
                           disabled={cancellingId === o.id}
-                          onClick={() => handleCancelOrder(o.id)}
+                          onClick={() => requestCancelOrder(o.id)}
                           className="h-8 text-xs font-semibold"
                         >
                           <XCircle className="mr-1 h-3.5 w-3.5" />
@@ -480,7 +498,7 @@ export default function ProfilePage() {
                     variant="destructive"
                     size="sm"
                     disabled={cancellingId === selectedOrder.id}
-                    onClick={() => handleCancelOrder(selectedOrder.id)}
+                    onClick={() => requestCancelOrder(selectedOrder.id)}
                   >
                     <XCircle className="mr-1.5 h-4 w-4" />
                     {t('profile.cancelOrder')}
@@ -491,6 +509,27 @@ export default function ProfilePage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Order Confirmation Alert Pop-Up */}
+      <AlertDialog open={Boolean(orderToCancel)} onOpenChange={(o) => !o && setOrderToCancel(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('profile.cancelOrder')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {orderToCancel && t('profile.confirmCancelOrder', { id: '#' + orderToCancel.id.slice(0, 8).toUpperCase() })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('admin.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancelOrderAction}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              {t('profile.cancelOrder')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

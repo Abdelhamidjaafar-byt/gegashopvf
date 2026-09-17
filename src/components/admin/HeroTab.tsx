@@ -5,7 +5,6 @@ import {
   Trash2,
   Edit2,
   Video,
-  Image as ImageIcon,
   ArrowUp,
   ArrowDown,
   RotateCcw,
@@ -31,6 +30,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -53,6 +62,8 @@ export default function HeroTab() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null)
+  const [deleteSlideId, setDeleteSlideId] = useState<string | null>(null)
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
   const [formData, setFormData] = useState<Omit<HeroSlide, 'id' | 'order'>>({
     type: 'video',
     url: 'hero.mp4',
@@ -148,18 +159,17 @@ export default function HeroTab() {
     setDialogOpen(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (confirm(t('admin.confirmDelete', 'Delete this item? This cannot be undone.'))) {
-      await deleteSlide(id)
-      toast.success('Hero media item deleted')
-    }
+  const confirmDeleteSlide = async () => {
+    if (!deleteSlideId) return
+    await deleteSlide(deleteSlideId)
+    setDeleteSlideId(null)
+    toast.success('Hero media item deleted')
   }
 
-  const handleReset = async () => {
-    if (confirm('Reset hero media items to default settings?')) {
-      await resetToDefaults()
-      toast.success('Reset to default hero item')
-    }
+  const confirmReset = async () => {
+    await resetToDefaults()
+    setResetConfirmOpen(false)
+    toast.success('Reset to default hero item')
   }
 
   if (loading) {
@@ -181,7 +191,7 @@ export default function HeroTab() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={handleReset} className="border-border">
+          <Button variant="outline" onClick={() => setResetConfirmOpen(true)} className="border-border">
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset Defaults
           </Button>
@@ -206,45 +216,45 @@ export default function HeroTab() {
               <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
                 <div className="flex items-center gap-2">
                   <Badge variant={slide.type === 'video' ? 'default' : 'secondary'} className="uppercase">
-                    {slide.type === 'video' ? (
-                      <Video className="mr-1 h-3 w-3" />
-                    ) : (
-                      <ImageIcon className="mr-1 h-3 w-3" />
-                    )}
                     {slide.type}
                   </Badge>
-                  <span className="text-xs font-mono text-muted-foreground">Slide #{index + 1}</span>
+                  <span className="text-xs text-muted-foreground">#{index + 1}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
-                    className="h-8 w-8"
-                    disabled={index === 0}
                     onClick={() => moveSlide(slide.id, 'up')}
-                    title="Move Up"
+                    disabled={index === 0}
+                    className="h-8 w-8 p-0"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </Button>
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
-                    className="h-8 w-8"
-                    disabled={index === slides.length - 1}
                     onClick={() => moveSlide(slide.id, 'down')}
-                    title="Move Down"
+                    disabled={index === slides.length - 1}
+                    className="h-8 w-8 p-0"
                   >
                     <ArrowDown className="h-4 w-4" />
                   </Button>
                   <Button
-                    size="icon"
-                    variant={slide.active ? 'outline' : 'ghost'}
-                    className={`h-8 w-8 ${slide.active ? 'text-emerald-500 border-emerald-500/30' : 'text-muted-foreground'}`}
+                    size="sm"
+                    variant={slide.active ? 'secondary' : 'outline'}
                     onClick={() => toggleSlideActive(slide.id)}
-                    title={slide.active ? 'Active (Click to disable)' : 'Inactive (Click to enable)'}
+                    className="h-8 text-xs font-semibold"
                   >
-                    {slide.active ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                    {slide.active ? (
+                      <>
+                        <CheckCircle2 className="mr-1 h-3.5 w-3.5 text-volt" /> Active
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="mr-1 h-3.5 w-3.5 text-muted-foreground" /> Hidden
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -278,9 +288,9 @@ export default function HeroTab() {
                         {slide.badge}
                       </span>
                     )}
-                    <h4 className="font-display font-bold text-sm text-foreground line-clamp-1">
+                    <h3 className="font-display text-base font-bold line-clamp-1">
                       {slide.titleA} <span className="text-volt">{slide.titleB}</span>
-                    </h4>
+                    </h3>
                   </div>
                 </div>
               </div>
@@ -303,7 +313,7 @@ export default function HeroTab() {
                 <Edit2 className="mr-1.5 h-3.5 w-3.5" />
                 Edit
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleDelete(slide.id)}>
+              <Button size="sm" variant="destructive" onClick={() => setDeleteSlideId(slide.id)}>
                 <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                 Delete
               </Button>
@@ -480,6 +490,44 @@ export default function HeroTab() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Alert Pop-Up */}
+      <AlertDialog open={Boolean(deleteSlideId)} onOpenChange={(o) => !o && setDeleteSlideId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Hero Item?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete this hero item? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteSlide}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Confirmation Alert Pop-Up */}
+      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Hero Items to Default?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to reset all hero media settings to default?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmReset}
+              className="bg-volt text-volt-fg hover:bg-volt-dim font-semibold"
+            >
+              Confirm Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

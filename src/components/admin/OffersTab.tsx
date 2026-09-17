@@ -27,6 +27,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -44,6 +54,7 @@ export default function OffersTab() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null)
+  const [deleteOfferId, setDeleteOfferId] = useState<string | null>(null)
 
   // Form states
   const [productId, setProductId] = useState('')
@@ -330,9 +341,7 @@ export default function OffersTab() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => {
-                      if (confirm('Delete this offer?')) deleteOffer(offer.id)
-                    }}
+                    onClick={() => setDeleteOfferId(offer.id)}
                     className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -356,6 +365,30 @@ export default function OffersTab() {
           </Button>
         </div>
       )}
+
+      {/* Delete Offer Confirmation Alert Pop-Up */}
+      <AlertDialog open={Boolean(deleteOfferId)} onOpenChange={(o) => !o && setDeleteOfferId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Offer?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to delete this offer? This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteOfferId) {
+                  deleteOffer(deleteOfferId)
+                  setDeleteOfferId(null)
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Add / Edit Offer Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

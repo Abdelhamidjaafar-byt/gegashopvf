@@ -7,6 +7,16 @@ import { useCategories, useBrands } from '@/hooks/useCatalog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 const ROOT = '__root__'
 
@@ -17,6 +27,7 @@ export default function TaxonomyTab() {
   const [catName, setCatName] = useState('')
   const [catParent, setCatParent] = useState<string>(ROOT)
   const [brandName, setBrandName] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'category' | 'brand'; id: string } | null>(null)
 
   const roots = categories.filter((c) => !c.parent_id)
 
@@ -48,20 +59,20 @@ export default function TaxonomyTab() {
     refetchBrands()
   }
 
-  const removeCategory = async (id: string) => {
-    if (!confirm(t('admin.confirmDelete'))) return
-    const { error } = await supabase.from('categories').delete().eq('id', id)
-    if (error) { toast.error(error.message); return }
-    toast.success(t('common.deleted'))
-    refetchCats()
-  }
-
-  const removeBrand = async (id: string) => {
-    if (!confirm(t('admin.confirmDelete'))) return
-    const { error } = await supabase.from('brands').delete().eq('id', id)
-    if (error) { toast.error(error.message); return }
-    toast.success(t('common.deleted'))
-    refetchBrands()
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    if (deleteTarget.type === 'category') {
+      const { error } = await supabase.from('categories').delete().eq('id', deleteTarget.id)
+      if (error) { toast.error(error.message); return }
+      toast.success(t('common.deleted'))
+      refetchCats()
+    } else {
+      const { error } = await supabase.from('brands').delete().eq('id', deleteTarget.id)
+      if (error) { toast.error(error.message); return }
+      toast.success(t('common.deleted'))
+      refetchBrands()
+    }
+    setDeleteTarget(null)
   }
 
   return (
@@ -89,7 +100,7 @@ export default function TaxonomyTab() {
                   <span className="text-sm font-semibold">{root.name}</span>
                   <span className="ml-2 text-xs text-muted-foreground">/{root.slug}</span>
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeCategory(root.id)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget({ type: 'category', id: root.id })}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -100,7 +111,7 @@ export default function TaxonomyTab() {
                       <span className="text-sm">{child.name}</span>
                       <span className="ml-2 text-xs text-muted-foreground">/{child.slug}</span>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeCategory(child.id)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget({ type: 'category', id: child.id })}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </li>
@@ -121,13 +132,31 @@ export default function TaxonomyTab() {
           {brands.map((b) => (
             <li key={b.id} className="flex items-center justify-between px-4 py-2.5">
               <span className="text-sm font-medium">{b.name}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => removeBrand(b.id)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget({ type: 'brand', id: b.id })}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </li>
           ))}
         </ul>
       </section>
+
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin.confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('admin.confirmDeleteDesc')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('admin.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold"
+            >
+              {t('admin.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
