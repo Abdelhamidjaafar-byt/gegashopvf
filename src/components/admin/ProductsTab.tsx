@@ -65,6 +65,12 @@ function getStaticSpecsForCategory(categoryId: string, categories: Category[]): 
   return CATEGORY_STATIC_SPECS.default
 }
 
+interface CustomSpecItem {
+  id: string
+  key: string
+  value: string
+}
+
 interface FormState {
   id?: string
   name: string
@@ -75,12 +81,13 @@ interface FormState {
   brand_id: string
   images: string[]
   specsValues: Record<string, string>
+  customSpecs: CustomSpecItem[]
   is_featured: boolean
 }
 
 const emptyForm: FormState = {
   name: '', description: '', price: '', stock: '', category_id: '', brand_id: '',
-  images: [], specsValues: {}, is_featured: false,
+  images: [], specsValues: {}, customSpecs: [], is_featured: false,
 }
 
 export default function ProductsTab() {
@@ -99,6 +106,25 @@ export default function ProductsTab() {
   }
 
   const openEdit = (p: Product) => {
+    const existingSpecs = p.specs || {}
+    const categoryStatic = getStaticSpecsForCategory(p.category_id || '', categories)
+    const categorySet = new Set(categoryStatic)
+
+    const specsValues: Record<string, string> = {}
+    const customSpecs: CustomSpecItem[] = []
+
+    for (const [k, v] of Object.entries(existingSpecs)) {
+      if (categorySet.has(k)) {
+        specsValues[k] = v
+      } else {
+        customSpecs.push({
+          id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          key: k,
+          value: v,
+        })
+      }
+    }
+
     setForm({
       id: p.id,
       name: p.name,
@@ -108,10 +134,39 @@ export default function ProductsTab() {
       category_id: p.category_id || '',
       brand_id: p.brand_id || '',
       images: [...p.images],
-      specsValues: { ...(p.specs || {}) },
+      specsValues,
+      customSpecs,
       is_featured: p.is_featured,
     })
     setOpen(true)
+  }
+
+  const addCustomSpecRow = () => {
+    setForm((f) => ({
+      ...f,
+      customSpecs: [
+        ...f.customSpecs,
+        {
+          id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          key: '',
+          value: '',
+        },
+      ],
+    }))
+  }
+
+  const updateCustomSpecRow = (id: string, field: 'key' | 'value', val: string) => {
+    setForm((f) => ({
+      ...f,
+      customSpecs: f.customSpecs.map((item) => (item.id === id ? { ...item, [field]: val } : item)),
+    }))
+  }
+
+  const removeCustomSpecRow = (id: string) => {
+    setForm((f) => ({
+      ...f,
+      customSpecs: f.customSpecs.filter((item) => item.id !== id),
+    }))
   }
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +186,11 @@ export default function ProductsTab() {
     for (const [k, v] of Object.entries(form.specsValues)) {
       if (v && v.trim()) {
         specs[k] = v.trim()
+      }
+    }
+    for (const item of form.customSpecs) {
+      if (item.key && item.key.trim() && item.value && item.value.trim()) {
+        specs[item.key.trim()] = item.value.trim()
       }
     }
     const payload = {
@@ -171,7 +231,6 @@ export default function ProductsTab() {
   }
 
   const currentCategorySpecs = getStaticSpecsForCategory(form.category_id, categories)
-  const allSpecKeys = Array.from(new Set([...currentCategorySpecs, ...Object.keys(form.specsValues || {})]))
 
   return (
     <div>
@@ -271,14 +330,16 @@ export default function ProductsTab() {
               <Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5 bg-secondary" />
             </div>
 
-            {/* Static Specs based on Category */}
-            <div className="sm:col-span-2 rounded-md border border-border bg-secondary/30 p-4 space-y-3">
+            {/* Category Static Specs + Additional Custom Key-Value Specs */}
+            <div className="sm:col-span-2 rounded-md border border-border bg-secondary/30 p-4 space-y-4">
               <div>
                 <Label className="font-display font-bold text-sm">{t('admin.specs')}</Label>
                 <p className="text-xs text-muted-foreground">{t('admin.specsSub')}</p>
               </div>
+
+              {/* Standard Category Specs Grid */}
               <div className="grid gap-3 sm:grid-cols-2">
-                {allSpecKeys.map((specKey) => (
+                {currentCategorySpecs.map((specKey) => (
                   <div key={specKey}>
                     <Label htmlFor={`spec-${specKey}`} className="text-xs font-semibold text-foreground">{specKey}</Label>
                     <Input
@@ -293,6 +354,54 @@ export default function ProductsTab() {
                     />
                   </div>
                 ))}
+              </div>
+
+              {/* Custom Additional Specifications Section */}
+              <div className="pt-3 border-t border-border/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-foreground/90">{t('admin.customSpecs')}</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCustomSpecRow}
+                    className="h-7 text-xs font-semibold"
+                  >
+                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    {t('admin.addCustomSpec')}
+                  </Button>
+                </div>
+
+                {form.customSpecs.length > 0 && (
+                  <div className="space-y-2">
+                    {form.customSpecs.map((item) => (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <Input
+                          value={item.key}
+                          onChange={(e) => updateCustomSpecRow(item.id, 'key', e.target.value)}
+                          placeholder={t('admin.specKeyPlaceholder')}
+                          className="w-1/2 bg-background text-xs"
+                        />
+                        <Input
+                          value={item.value}
+                          onChange={(e) => updateCustomSpecRow(item.id, 'value', e.target.value)}
+                          placeholder={t('admin.specValuePlaceholder')}
+                          className="w-1/2 bg-background text-xs"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCustomSpecRow(item.id)}
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                          title={t('admin.delete')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
