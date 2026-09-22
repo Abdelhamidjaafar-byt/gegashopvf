@@ -4,9 +4,9 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { formatDate } from '@/lib/format'
-import type { UserProfile } from '@/types'
+import type { Role, UserProfile } from '@/types'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -31,7 +31,7 @@ export default function UsersTab() {
     refetch()
   }, [refetch])
 
-  const setRole = async (id: string, role: 'admin' | 'customer') => {
+  const setRole = async (id: string, role: Role) => {
     const { error } = await supabase.from('users').update({ role }).eq('id', id)
     if (error) {
       toast.error(error.message)
@@ -53,7 +53,7 @@ export default function UsersTab() {
             <TableHead>{t('checkout.phone')}</TableHead>
             <TableHead>{t('admin.date')}</TableHead>
             <TableHead>{t('admin.role')}</TableHead>
-            <TableHead className="w-40"></TableHead>
+            <TableHead className="w-48"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,19 +68,32 @@ export default function UsersTab() {
               </TableCell>
               <TableCell className="text-sm">{formatDate(u.created_at, i18n.language)}</TableCell>
               <TableCell>
-                <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className={u.role === 'admin' ? 'bg-volt text-volt-fg' : ''}>
-                  {u.role}
-                </Badge>
+                {u.role === 'admin' && (
+                  <Badge className="bg-volt text-volt-fg font-semibold">Admin</Badge>
+                )}
+                {u.role === 'product_manager' && (
+                  <Badge className="bg-sky-500/20 text-sky-400 border border-sky-500/30 font-semibold">
+                    {t('admin.productManager', 'Product Manager')}
+                  </Badge>
+                )}
+                {u.role === 'customer' && (
+                  <Badge variant="secondary" className="capitalize">{t('admin.customer', 'Customer')}</Badge>
+                )}
               </TableCell>
               <TableCell>
-                {u.id !== me?.id && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRole(u.id, u.role === 'admin' ? 'customer' : 'admin')}
-                  >
-                    {u.role === 'admin' ? t('admin.makeCustomer') : t('admin.makeAdmin')}
-                  </Button>
+                {u.id !== me?.id ? (
+                  <Select value={u.role} onValueChange={(val) => setRole(u.id, val as Role)}>
+                    <SelectTrigger className="h-8 text-xs bg-secondary">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="customer">{t('admin.customer', 'Customer')}</SelectItem>
+                      <SelectItem value="product_manager">{t('admin.productManager', 'Product Manager')}</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-xs text-muted-foreground italic">(Current User)</span>
                 )}
               </TableCell>
             </TableRow>
@@ -90,3 +103,4 @@ export default function UsersTab() {
     </div>
   )
 }
+

@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { StockBadge } from '@/components/ProductCard'
 
+import { useAuth } from '@/contexts/AuthContext'
+
 const CATEGORY_STATIC_SPECS: Record<string, string[]> = {
   laptops: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
   computers: ['Processeur (CPU)', 'Carte Graphique (GPU)', 'Mémoire RAM', 'Stockage (SSD/HDD)', 'Écran', 'Système d\'exploitation', 'Batterie', 'Poids', 'Garantie'],
@@ -104,6 +106,7 @@ const emptyForm: FormState = {
 
 export default function ProductsTab() {
   const { t, i18n } = useTranslation()
+  const { isAdmin } = useAuth()
   const { products, refetch } = useProducts()
   const { categories } = useCategories()
   const { brands } = useBrands()
@@ -303,14 +306,17 @@ export default function ProductsTab() {
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setDeleteTargetId(p.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleteTargetId(p.id)}
+                        title={t('admin.delete')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

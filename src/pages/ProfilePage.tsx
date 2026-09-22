@@ -36,7 +36,7 @@ const emptyAddress = { label: 'Home', full_name: '', phone: '', street: '', city
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
-  const { user, loading: authLoading, refreshProfile, updatePassword } = useAuth()
+  const { user, hasAdminAccess, loading: authLoading, refreshProfile, updatePassword } = useAuth()
   const [params] = useSearchParams()
   const { orders, loading: ordersLoading, refetch: refetchOrders, setOrders } = useMyOrders(user?.id)
   const { addresses, save, remove } = useAddresses(user?.id)
@@ -181,8 +181,8 @@ export default function ProfilePage() {
             {user.email} · {t('profile.memberSince')} {formatDate(user.created_at, i18n.language)}
           </p>
         </div>
-        {user.role === 'admin' && (
-          <Button asChild variant="outline" className="border-volt text-volt hover:bg-volt/10">
+        {hasAdminAccess && (
+          <Button asChild variant="outline" className="border-volt text-volt hover:bg-volt/10 font-semibold">
             <Link to="/admin">{t('nav.admin')}</Link>
           </Button>
         )}

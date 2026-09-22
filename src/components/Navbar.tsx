@@ -21,7 +21,7 @@ import {
 
 export default function Navbar() {
   const { t, i18n } = useTranslation()
-  const { user, isAdmin, signOut } = useAuth()
+  const { user, hasAdminAccess, signOut } = useAuth()
   const { count } = useCart()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -166,7 +166,7 @@ export default function Navbar() {
                 <DropdownMenuItem onClick={() => navigate('/profile')}>
                   <User className="mr-2 h-4 w-4" /> {t('nav.account')}
                 </DropdownMenuItem>
-                {isAdmin && (
+                {hasAdminAccess && (
                   <DropdownMenuItem onClick={() => navigate('/admin')}>
                     <ShieldCheck className="mr-2 h-4 w-4 text-volt" /> {t('nav.admin')}
                   </DropdownMenuItem>
@@ -221,7 +221,7 @@ export default function Navbar() {
                 <Link to="/profile" onClick={() => setOpen(false)} className="text-lg font-medium">
                   {t('nav.account')}
                 </Link>
-                {isAdmin && (
+                {hasAdminAccess && (
                   <Link to="/admin" onClick={() => setOpen(false)} className="text-lg font-medium text-volt">
                     {t('nav.admin')}
                   </Link>

@@ -6,8 +6,10 @@
 
 -- ---------- Types ----------
 do $$ begin
-  create type public.user_role as enum ('customer', 'admin');
-exception when duplicate_object then null; end $$;
+  alter type public.user_role add value if not exists 'product_manager';
+exception when undefined_object then
+  create type public.user_role as enum ('customer', 'product_manager', 'admin');
+end $$;
 
 -- ---------- Tables ----------
 create table if not exists public.users (
@@ -117,6 +119,18 @@ as $$
   );
 $$;
 
+-- Admin or Product Manager check used by catalog RLS policies.
+create or replace function public.is_admin_or_pm()
+returns boolean
+language sql stable security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.users
+    where id = auth.uid() and role::text in ('admin', 'product_manager')
+  );
+$$;
+
 -- ---------- Auth sync ----------
 -- New auth user -> public.users row.
 -- The FIRST registered user becomes 'admin' (the super admin).
@@ -184,39 +198,39 @@ create policy users_update on public.users
   for update using (auth.uid() = id or public.is_admin())
   with check (auth.uid() = id or public.is_admin());
 
--- catalog: public read, admin write
+-- catalog: public read; admin & product_manager write/update/delete for categories/brands; admin & product_manager add/modify products, admin delete products
 drop policy if exists categories_read on public.categories;
 create policy categories_read on public.categories for select using (true);
 drop policy if exists categories_write on public.categories;
 create policy categories_write on public.categories
-  for insert with check (public.is_admin());
+  for insert with check (public.is_admin_or_pm());
 drop policy if exists categories_update on public.categories;
 create policy categories_update on public.categories
-  for update using (public.is_admin());
+  for update using (public.is_admin_or_pm());
 drop policy if exists categories_delete on public.categories;
 create policy categories_delete on public.categories
-  for delete using (public.is_admin());
+  for delete using (public.is_admin_or_pm());
 
 drop policy if exists brands_read on public.brands;
 create policy brands_read on public.brands for select using (true);
 drop policy if exists brands_write on public.brands;
 create policy brands_write on public.brands
-  for insert with check (public.is_admin());
+  for insert with check (public.is_admin_or_pm());
 drop policy if exists brands_update on public.brands;
 create policy brands_update on public.brands
-  for update using (public.is_admin());
+  for update using (public.is_admin_or_pm());
 drop policy if exists brands_delete on public.brands;
 create policy brands_delete on public.brands
-  for delete using (public.is_admin());
+  for delete using (public.is_admin_or_pm());
 
 drop policy if exists products_read on public.products;
 create policy products_read on public.products for select using (true);
 drop policy if exists products_write on public.products;
 create policy products_write on public.products
-  for insert with check (public.is_admin());
+  for insert with check (public.is_admin_or_pm());
 drop policy if exists products_update on public.products;
 create policy products_update on public.products
-  for update using (public.is_admin());
+  for update using (public.is_admin_or_pm());
 drop policy if exists products_delete on public.products;
 create policy products_delete on public.products
   for delete using (public.is_admin());

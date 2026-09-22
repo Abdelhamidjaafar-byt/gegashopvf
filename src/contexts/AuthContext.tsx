@@ -6,6 +6,8 @@ interface AuthContextValue {
   user: UserProfile | null
   loading: boolean
   isAdmin: boolean
+  isProductManager: boolean
+  hasAdminAccess: boolean
   isPasswordRecovery: boolean
   clearPasswordRecovery: () => void
   signIn: (email: string, password: string) => Promise<{ error?: string }>
@@ -119,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isAdmin: user?.role === 'admin',
+      isProductManager: user?.role === 'product_manager',
+      hasAdminAccess: user?.role === 'admin' || user?.role === 'product_manager',
       isPasswordRecovery,
       clearPasswordRecovery,
       signIn,
