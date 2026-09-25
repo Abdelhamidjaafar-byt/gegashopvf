@@ -84,7 +84,7 @@ export function CategoriesMenuDesktop() {
                   {hasChildren ? (
                     <span>{root.name}</span>
                   ) : (
-                    <Link to={`/shop?category=${root.id}`} className="flex-1" onClick={() => setOpen(false)}>
+                    <Link to={`/shop?category=${root.slug || root.id}`} className="flex-1" onClick={() => setOpen(false)}>
                       {root.name}
                     </Link>
                   )}
@@ -99,7 +99,7 @@ export function CategoriesMenuDesktop() {
             {activeRootCat && (
               <>
                 <Link
-                  to={`/shop?category=${activeRootCat.id}`}
+                  to={`/shop?category=${activeRootCat.slug || activeRootCat.id}`}
                   onClick={() => setOpen(false)}
                   className="font-display text-sm font-bold uppercase tracking-wide text-volt hover:underline"
                 >
@@ -110,7 +110,7 @@ export function CategoriesMenuDesktop() {
                     {activeChildren.map((child) => (
                       <Link
                         key={child.id}
-                        to={`/shop?category=${child.id}`}
+                        to={`/shop?category=${child.slug || child.id}`}
                         onClick={() => setOpen(false)}
                         className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                       >
@@ -159,7 +159,7 @@ export function CategoriesMenuMobile({ onNavigate }: { onNavigate: () => void })
             <div key={root.id}>
               <div className="flex items-center">
                 <Link
-                  to={`/shop?category=${root.id}`}
+                  to={`/shop?category=${root.slug || root.id}`}
                   onClick={onNavigate}
                   className="flex-1 py-1.5 text-base font-medium"
                 >
@@ -178,7 +178,7 @@ export function CategoriesMenuMobile({ onNavigate }: { onNavigate: () => void })
               {isOpen && children.length > 0 && (
                 <div className="ml-4 flex flex-col gap-1 border-l border-border pl-3">
                   <Link
-                    to={`/shop?category=${root.id}`}
+                    to={`/shop?category=${root.slug || root.id}`}
                     onClick={onNavigate}
                     className="py-1 text-sm font-medium text-volt"
                   >
@@ -187,7 +187,7 @@ export function CategoriesMenuMobile({ onNavigate }: { onNavigate: () => void })
                   {children.map((child) => (
                     <Link
                       key={child.id}
-                      to={`/shop?category=${child.id}`}
+                      to={`/shop?category=${child.slug || child.id}`}
                       onClick={onNavigate}
                       className="py-1 text-sm text-muted-foreground hover:text-foreground"
                     >

@@ -72,7 +72,7 @@ export default function BetaAppleSpotlight() {
           </div>
 
           <Link
-            to="/shop?q=Apple"
+            to="/shop?category=univers-apple-mac"
             className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-500/30"
           >
             Explore All Apple <ArrowRight className="h-4 w-4" />

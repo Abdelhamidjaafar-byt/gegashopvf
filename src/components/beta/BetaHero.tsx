@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
 import { useOffers } from '@/hooks/useOffers'
+import { useHeroSlides } from '@/hooks/useHeroSlides'
 import { formatPrice } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
 
@@ -98,15 +99,72 @@ export default function BetaHero() {
   const { i18n } = useTranslation()
   const { products } = useProducts()
   const { offers } = useOffers()
+  const { activeSlides: adminSlides } = useHeroSlides()
   const [activeSlideIdx, setActiveSlideIdx] = useState(0)
+
+  // Dynamic slides combining admin-uploaded slides and latest 3 DB products
+  const heroSlides = useMemo(() => {
+    const list: Array<{
+      id: string | number
+      tag: string
+      title: string
+      subtitle: string
+      price?: string
+      oldPrice?: string
+      image: string
+      link: string
+      badge: string
+    }> = []
+
+    // 1. Add active custom slides uploaded by admin
+    if (adminSlides && adminSlides.length > 0) {
+      adminSlides.forEach((slide) => {
+        if (slide.url && slide.url !== 'hero.mp4') {
+          list.push({
+            id: slide.id,
+            tag: slide.badge || 'SPECIAL ANNOUNCEMENT',
+            title: slide.titleA ? `${slide.titleA} ${slide.titleB || ''}` : (slide.titleB || 'Featured Deal'),
+            subtitle: slide.sub || '',
+            image: slide.url,
+            link: slide.ctaLink || '/shop',
+            badge: slide.badge || 'PROMO',
+          })
+        }
+      })
+    }
+
+    // 2. Add the last 3 products from database catalog
+    const latest3 = products.slice(0, 3)
+    latest3.forEach((p, idx) => {
+      list.push({
+        id: `db-prod-${p.id}`,
+        tag: p.brand_id ? p.brand_id.toUpperCase() : 'NEW ARRIVAL',
+        title: p.name,
+        subtitle: p.description || 'Authentic tech gear & gaming setups delivered anywhere in Morocco with official warranty.',
+        price: formatPrice(p.price, i18n.language),
+        oldPrice: formatPrice(p.price * 1.15, i18n.language),
+        image: p.images?.[0] || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&q=80',
+        link: `/product/${p.id}`,
+        badge: p.is_featured ? 'FEATURED' : idx === 0 ? 'NEW ARRIVAL' : 'TOP PICK',
+      })
+    })
+
+    // 3. Fallback to default slides if list is empty
+    if (list.length === 0) {
+      return HERO_SLIDES
+    }
+
+    return list
+  }, [adminSlides, products, i18n.language])
 
   // Auto carousel slide
   useEffect(() => {
+    if (heroSlides.length === 0) return
     const timer = setInterval(() => {
-      setActiveSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length)
+      setActiveSlideIdx((prev) => (prev + 1) % heroSlides.length)
     }, 6000)
     return () => clearInterval(timer)
-  }, [])
+  }, [heroSlides.length])
 
   // Active flash deal
   const flashOffer = useMemo(() => {
@@ -121,7 +179,7 @@ export default function BetaHero() {
 
   const { d, h, m, s } = useCountdown(flashOffer?.end_time)
 
-  const currentSlide = HERO_SLIDES[activeSlideIdx]
+  const currentSlide = heroSlides[activeSlideIdx % heroSlides.length] || heroSlides[0]
 
   return (
     <section className="mx-auto max-w-7xl px-4 pt-4 pb-8 sm:px-6">
@@ -249,9 +307,9 @@ export default function BetaHero() {
               <img
                 src={currentSlide.image}
                 alt={currentSlide.title}
-                className="h-full w-full object-cover opacity-60 filter brightness-105 group-hover:scale-105 transition-transform duration-700"
+                className="h-full w-full object-cover opacity-70 filter brightness-105 group-hover:scale-105 transition-transform duration-700"
               />
-              {/* <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" /> */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
               {/* <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" /> */}
             </motion.div>
           </AnimatePresence>
@@ -262,9 +320,9 @@ export default function BetaHero() {
                 <span className="inline-flex items-center gap-1 rounded-md bg-volt/20 border border-volt/40 px-2.5 py-0.5 text-xs font-bold text-volt">
                   <Sparkles className="h-3 w-3" /> {currentSlide.badge}
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-widest text-zinc-300">
+                {/* <span className="text-xs font-semibold uppercase tracking-widest text-zinc-300">
                   {currentSlide.tag}
-                </span>
+                </span> */}
               </div>
 
               <h1 className="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1] text-white">
@@ -275,13 +333,17 @@ export default function BetaHero() {
                 {currentSlide.subtitle}
               </p>
 
-              <div className="mt-4 flex items-baseline gap-3">
-                <span className="font-display text-2xl md:text-3xl font-extrabold text-volt">
-                  {currentSlide.price}
-                </span>
-                <span className="text-sm text-zinc-400 line-through">
-                  {currentSlide.oldPrice}
-                </span>
+              <div className="mt-4 flex flex-wrap items-baseline gap-3">
+                {currentSlide.price && (
+                  <span className="font-display text-2xl md:text-3xl font-extrabold text-volt">
+                    {currentSlide.price}
+                  </span>
+                )}
+                {currentSlide.oldPrice && (
+                  <span className="text-sm text-zinc-400 line-through">
+                    {currentSlide.oldPrice}
+                  </span>
+                )}
                 <span className="rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-xs font-bold">
                   Free Shipping Morocco
                 </span>
@@ -306,7 +368,7 @@ export default function BetaHero() {
 
               {/* Carousel Indicators */}
               <div className="flex items-center gap-2">
-                {HERO_SLIDES.map((_, idx) => (
+                {heroSlides.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveSlideIdx(idx)}

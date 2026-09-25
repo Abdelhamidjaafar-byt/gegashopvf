@@ -274,10 +274,10 @@ export default function Navbar() {
             <Link to="/shop?category=displays-tv" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               Monitors
             </Link>
-            <Link to="/shop?q=Apple" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/shop?category=univers-apple-mac" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               Apple
             </Link>
-            <Link to="/shop?q=Chair" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/shop?category=chaises-et-bureaux" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               Gaming Chairs
             </Link>
             <Link to="/shop?category=peripheriques" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
