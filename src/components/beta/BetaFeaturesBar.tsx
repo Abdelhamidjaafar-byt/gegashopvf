@@ -1,4 +1,4 @@
-import { Truck, Headset, ShieldCheck, MapPin, RefreshCw, Award } from 'lucide-react'
+import { Truck, Headset, RefreshCw, Award } from 'lucide-react'
 
 const FEATURES = [
   {

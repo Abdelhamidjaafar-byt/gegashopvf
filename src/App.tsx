@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { WishlistProvider } from '@/contexts/WishlistContext'
-import { ThemeProvider, useTheme } from '@/contexts/ThemeContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import WhatsAppBubble from '@/components/WhatsAppBubble'
@@ -21,8 +21,6 @@ import AdminPage from '@/pages/AdminPage'
 import '@/i18n'
 
 function AppContent() {
-  const { theme } = useTheme()
-
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
       <Navbar />
@@ -32,7 +30,6 @@ function AppContent() {
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/deals" element={<DealsPage />} />
           <Route path="/builder" element={<BuilderPage />} />
-
           <Route path="/product/:id" element={<ProductPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -45,7 +42,7 @@ function AppContent() {
       </main>
       <Footer />
       <WhatsAppBubble />
-      <Toaster position="bottom-right" theme={theme === 'dark' ? 'dark' : 'light'} />
+      <Toaster position="bottom-right" theme="light" />
     </div>
   )
 }

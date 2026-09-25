@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Gamepad2, Wrench, ArrowRight, Shield, Sparkles } from 'lucide-react'
+import { Gamepad2, Wrench, ArrowRight } from 'lucide-react'
 
 export default function BetaDualBanners() {
   return (

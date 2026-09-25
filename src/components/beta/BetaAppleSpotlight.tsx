@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Apple, Sparkles, ArrowRight, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { Apple, ArrowRight, ShieldCheck } from 'lucide-react'
 import { formatPrice } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
 

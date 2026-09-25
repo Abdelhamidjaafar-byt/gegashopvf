@@ -3,10 +3,7 @@ import { Link } from 'react-router'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   Flame,
-  Zap,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   Cpu,
   Laptop,
   Monitor,
@@ -15,15 +12,12 @@ import {
   HardDrive,
   Headphones,
   Sliders,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2
+  Sparkles
 } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
 import { useOffers } from '@/hooks/useOffers'
 import { formatPrice } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
 
 function useCountdown(targetIso?: string) {
   const getMs = () => {

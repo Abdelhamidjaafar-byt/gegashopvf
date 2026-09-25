@@ -3,27 +3,23 @@ import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
   Heart,
-  Instagram,
   LogOut,
-  MapPin,
   Menu,
   Phone,
   Search,
   ShieldCheck,
   ShoppingCart,
   User,
-  Zap,
   Flame,
   HelpCircle,
   Truck,
   Headset,
-  Sliders,
-  ChevronDown
+  Sliders
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { setLanguage } from '@/i18n'
-import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
+import { STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
 import { formatPrice } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

@@ -1,11 +1,9 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router'
-import { motion, AnimatePresence } from 'motion/react'
-import { Cpu, Gamepad2, Laptop, Sliders, ArrowRight, Sparkles, Filter } from 'lucide-react'
-import { useProducts, useCategories } from '@/hooks/useCatalog'
+import { Cpu, Gamepad2, Laptop, Sliders, ArrowRight, Sparkles } from 'lucide-react'
+import { useProducts } from '@/hooks/useCatalog'
 import ProductCard from '@/components/ProductCard'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useTranslation } from 'react-i18next'
 
 const TABS = [
   { id: 'all', label: 'All Setups & Gear', icon: Sparkles },
@@ -16,7 +14,6 @@ const TABS = [
 ]
 
 export default function BetaMainShowcase() {
-  const { t } = useTranslation()
   const { products, loading } = useProducts()
   const [activeTab, setActiveTab] = useState('all')
 

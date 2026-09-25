@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import {
   AlertTriangle,
   Check,
@@ -11,8 +11,6 @@ import {
   Search,
   RotateCcw,
   Sparkles,
-  Package,
-  Layers,
   X
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -38,7 +36,6 @@ import {
   socketMismatch,
   type SlotId,
 } from '@/lib/builder-data'
-import type { Product } from '@/types'
 
 export type DynamicBuildSelection = Partial<Record<SlotId, DynamicBuildPart>>
 
@@ -47,7 +44,7 @@ export default function BuilderPage() {
   const { add } = useCart()
   const navigate = useNavigate()
 
-  const { parts, loading, getPartsForSlot } = useDynamicBuilderParts()
+  const { loading, getPartsForSlot } = useDynamicBuilderParts()
 
   const [selection, setSelection] = useState<DynamicBuildSelection>({})
   const [activeSlot, setActiveSlot] = useState<SlotId>('cpu')

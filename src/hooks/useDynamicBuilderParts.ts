@@ -30,7 +30,6 @@ function detectSlotForProduct(p: Product, categoryMap: Map<string, string>): Slo
 
   const catName = (p.category_id ? categoryMap.get(p.category_id) || '' : '').toLowerCase()
   const name = p.name.toLowerCase()
-  const desc = (p.description || '').toLowerCase()
 
   // Exclude non-component items like laptops, pre-built complete PCs, or smartphones
   if (name.includes('laptop') || name.includes('macbook') || name.includes('iphone') || name.includes('galaxy')) {

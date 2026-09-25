@@ -11,7 +11,6 @@ import {
   ChevronsRight,
   ExternalLink,
   Eye,
-  Filter,
   Pencil,
   Plus,
   Search,
@@ -130,7 +129,6 @@ const emptyForm: FormState = {
 }
 
 type SortField = 'name' | 'category' | 'brand' | 'price' | 'stock' | 'created'
-type SortOrder = 'asc' | 'desc'
 
 export default function ProductsTab() {
   const { t, i18n } = useTranslation()

@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { MapPin, Phone, Instagram, Facebook, Youtube, Send, Truck, ShieldCheck, Headset, ExternalLink, Zap } from 'lucide-react'
+import { MapPin, Phone, Instagram, Facebook, Youtube, Send, Truck, ExternalLink } from 'lucide-react'
 import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
 
 export default function BetaSEOFooter() {

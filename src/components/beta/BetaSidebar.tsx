@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Flame, Headphones, BookOpen, Clock, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Flame, Headphones, BookOpen, Clock } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
 import { formatPrice } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
@@ -35,8 +35,6 @@ export default function BetaSidebar() {
   const accessories = products
     .filter((p) => p.category_id === 'peripheriques' || p.category_id === 'audio' || p.price < 2000)
     .slice(0, 3)
-
-  const latestProducts = products.slice(0, 3)
 
   return (
     <aside className="space-y-6">
