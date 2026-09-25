@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
-export type Theme = 'dark' | 'light'
+export type Theme = 'light'
 
 interface ThemeContextValue {
   theme: Theme
@@ -12,40 +12,21 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 const STORAGE_KEY = 'eg_theme'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored === 'light' || stored === 'dark') return stored
-    } catch {
-      // fallback
-    }
-    // Default to dark theme for ElectroGega, but allow seamless toggle to light
-    return 'dark'
-  })
+  const [theme] = useState<Theme>('light')
 
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-      root.classList.remove('light')
-    } else {
-      root.classList.add('light')
-      root.classList.remove('dark')
-    }
+    root.classList.add('light')
+    root.classList.remove('dark')
     try {
-      localStorage.setItem(STORAGE_KEY, theme)
+      localStorage.setItem(STORAGE_KEY, 'light')
     } catch {
       // ignore
     }
-  }, [theme])
+  }, [])
 
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme)
-  }
-
-  const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'))
-  }
+  const setTheme = () => {}
+  const toggleTheme = () => {}
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>

@@ -1,7 +1,28 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo, useEffect } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { ExternalLink, Eye, Pencil, Plus, Trash2, Upload, X } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ExternalLink,
+  Eye,
+  Filter,
+  Pencil,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Trash2,
+  Upload,
+  X,
+  Package,
+  Layers,
+  Tag
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
@@ -13,6 +34,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
@@ -29,7 +51,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { StockBadge } from '@/components/ProductCard'
-
 import { useAuth } from '@/contexts/AuthContext'
 
 const CATEGORY_STATIC_SPECS: Record<string, string[]> = {
@@ -97,12 +118,19 @@ interface FormState {
   specsValues: Record<string, string>
   customSpecs: CustomSpecItem[]
   is_featured: boolean
+  builder_slot: string
+  socket: string
+  watts: string
 }
 
 const emptyForm: FormState = {
   name: '', description: '', price: '', stock: '', category_id: '', brand_id: '',
   images: [], specsValues: {}, customSpecs: [], is_featured: false,
+  builder_slot: 'none', socket: '', watts: '',
 }
+
+type SortField = 'name' | 'category' | 'brand' | 'price' | 'stock' | 'created'
+type SortOrder = 'asc' | 'desc'
 
 export default function ProductsTab() {
   const { t, i18n } = useTranslation()
@@ -110,6 +138,8 @@ export default function ProductsTab() {
   const { products, refetch } = useProducts()
   const { categories } = useCategories()
   const { brands } = useBrands()
+
+  // Form & Modals State
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [saving, setSaving] = useState(false)
@@ -117,6 +147,141 @@ export default function ProductsTab() {
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
   const [previewImageIdx, setPreviewImageIdx] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Search, Filtering, Sorting & Pagination State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedBrand, setSelectedBrand] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('created_desc')
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(10)
+
+  // Fast lookups for category & brand names
+  const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
+  const brandMap = useMemo(() => new Map(brands.map((b) => [b.id, b.name])), [brands])
+
+  // Reset to Page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedCategory, selectedBrand, sortBy, pageSize])
+
+  // Filter products by search query, category, and brand
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      // Category filter
+      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
+        return false
+      }
+
+      // Brand filter
+      if (selectedBrand !== 'all' && p.brand_id !== selectedBrand) {
+        return false
+      }
+
+      // Text search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim()
+        const nameMatch = p.name.toLowerCase().includes(q)
+        const catName = p.category_id ? (categoryMap.get(p.category_id) || '').toLowerCase() : ''
+        const brandName = p.brand_id ? (brandMap.get(p.brand_id) || '').toLowerCase() : ''
+        const catMatch = catName.includes(q)
+        const brandMatch = brandName.includes(q)
+        const descMatch = (p.description || '').toLowerCase().includes(q)
+        const specsMatch = Object.values(p.specs || {}).some((val) =>
+          String(val).toLowerCase().includes(q)
+        )
+
+        if (!nameMatch && !catMatch && !brandMatch && !descMatch && !specsMatch) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [products, searchQuery, selectedCategory, selectedBrand, categoryMap, brandMap])
+
+  // Sort products based on sortBy key
+  const sortedProducts = useMemo(() => {
+    const list = [...filteredProducts]
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case 'name_asc':
+          return a.name.localeCompare(b.name)
+        case 'name_desc':
+          return b.name.localeCompare(a.name)
+        case 'category_asc': {
+          const catA = (a.category_id ? categoryMap.get(a.category_id) : '') || ''
+          const catB = (b.category_id ? categoryMap.get(b.category_id) : '') || ''
+          return catA.localeCompare(catB)
+        }
+        case 'category_desc': {
+          const catA = (a.category_id ? categoryMap.get(a.category_id) : '') || ''
+          const catB = (b.category_id ? categoryMap.get(b.category_id) : '') || ''
+          return catB.localeCompare(catA)
+        }
+        case 'brand_asc': {
+          const brandA = (a.brand_id ? brandMap.get(a.brand_id) : '') || ''
+          const brandB = (b.brand_id ? brandMap.get(b.brand_id) : '') || ''
+          return brandA.localeCompare(brandB)
+        }
+        case 'brand_desc': {
+          const brandA = (a.brand_id ? brandMap.get(a.brand_id) : '') || ''
+          const brandB = (b.brand_id ? brandMap.get(b.brand_id) : '') || ''
+          return brandB.localeCompare(brandA)
+        }
+        case 'price_asc':
+          return Number(a.price) - Number(b.price)
+        case 'price_desc':
+          return Number(b.price) - Number(a.price)
+        case 'stock_asc':
+          return a.stock - b.stock
+        case 'stock_desc':
+          return b.stock - a.stock
+        case 'created_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        case 'created_desc':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      }
+    })
+    return list
+  }, [filteredProducts, sortBy, categoryMap, brandMap])
+
+  // Pagination calculation
+  const totalProducts = sortedProducts.length
+  const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const startIndex = (safePage - 1) * pageSize
+  const endIndex = Math.min(startIndex + pageSize, totalProducts)
+  const paginatedProducts = useMemo(() => {
+    return sortedProducts.slice(startIndex, endIndex)
+  }, [sortedProducts, startIndex, endIndex])
+
+  // Toggle table header sort
+  const handleHeaderSort = (field: SortField) => {
+    if (field === 'name') {
+      setSortBy((prev) => (prev === 'name_asc' ? 'name_desc' : 'name_asc'))
+    } else if (field === 'category') {
+      setSortBy((prev) => (prev === 'category_asc' ? 'category_desc' : 'category_asc'))
+    } else if (field === 'brand') {
+      setSortBy((prev) => (prev === 'brand_asc' ? 'brand_desc' : 'brand_asc'))
+    } else if (field === 'price') {
+      setSortBy((prev) => (prev === 'price_asc' ? 'price_desc' : 'price_asc'))
+    } else if (field === 'stock') {
+      setSortBy((prev) => (prev === 'stock_desc' ? 'stock_asc' : 'stock_desc'))
+    }
+  }
+
+  const getSortHeaderIcon = (field: SortField) => {
+    if (sortBy.startsWith(field)) {
+      return sortBy.endsWith('_asc') ? (
+        <ArrowUp className="ml-1 inline h-3.5 w-3.5 text-volt" />
+      ) : (
+        <ArrowDown className="ml-1 inline h-3.5 w-3.5 text-volt" />
+      )
+    }
+    return <ArrowUpDown className="ml-1 inline h-3 w-3 opacity-30 group-hover:opacity-100" />
+  }
 
   const openNew = () => {
     setForm(emptyForm)
@@ -143,6 +308,10 @@ export default function ProductsTab() {
       }
     }
 
+    const builderSlot = p.specs?.['PC Builder Slot'] || p.specs?.builder_slot || 'none'
+    const socketVal = p.specs?.['Socket'] || p.specs?.socket || ''
+    const wattsVal = p.specs?.['Watts'] || p.specs?.watts || p.specs?.TDP || ''
+
     setForm({
       id: p.id,
       name: p.name,
@@ -155,6 +324,9 @@ export default function ProductsTab() {
       specsValues,
       customSpecs,
       is_featured: p.is_featured,
+      builder_slot: builderSlot,
+      socket: socketVal,
+      watts: wattsVal,
     })
     setOpen(true)
   }
@@ -211,6 +383,17 @@ export default function ProductsTab() {
         specs[item.key.trim()] = item.value.trim()
       }
     }
+
+    if (form.builder_slot && form.builder_slot !== 'none') {
+      specs['PC Builder Slot'] = form.builder_slot
+    }
+    if (form.socket && form.socket.trim()) {
+      specs['Socket'] = form.socket.trim()
+    }
+    if (form.watts && form.watts.trim()) {
+      specs['Watts'] = form.watts.trim()
+    }
+
     const payload = {
       name: form.name,
       description: form.description,
@@ -249,82 +432,432 @@ export default function ProductsTab() {
     refetch()
   }
 
+  const resetFilters = () => {
+    setSearchQuery('')
+    setSelectedCategory('all')
+    setSelectedBrand('all')
+    setSortBy('created_desc')
+    setCurrentPage(1)
+  }
+
   const currentCategorySpecs = getStaticSpecsForCategory(form.category_id, categories)
+  const isFiltered = searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedBrand !== 'all'
 
   return (
-    <div>
-      <Button onClick={openNew} className="bg-volt font-semibold text-volt-fg hover:bg-volt-dim">
-        <Plus className="mr-2 h-4 w-4" /> {t('admin.addProduct')}
-      </Button>
+    <div className="space-y-4">
+      
+      {/* 1. TOP CONTROL BAR: SEARCH, FILTERS, ORDER BY, ADD BUTTON */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
+        
+        {/* Left Side: Search Input */}
+        <div className="relative flex-1 min-w-[260px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t('admin.searchPlaceholder', 'Search by product name, category, or brand...')}
+            className="pl-9 pr-8 bg-secondary border-border focus-visible:ring-volt text-xs h-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
 
-      <div className="mt-6 overflow-x-auto rounded-md border border-border">
+        {/* Right Side: Filters & Sort Dropdowns */}
+        <div className="flex flex-wrap items-center gap-2">
+          
+          {/* Category Filter */}
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[150px] bg-secondary text-xs h-9">
+              <SelectValue placeholder={t('admin.filterByCategory', 'Category')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.allCategories', 'All Categories')}</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.id} className="text-xs">
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Brand Filter */}
+          <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+            <SelectTrigger className="w-[140px] bg-secondary text-xs h-9">
+              <SelectValue placeholder={t('admin.filterByBrand', 'Brand')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('admin.allBrands', 'All Brands')}</SelectItem>
+              {brands.map((b) => (
+                <SelectItem key={b.id} value={b.id} className="text-xs">
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Order By Selector */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[170px] bg-secondary text-xs h-9">
+              <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5 text-volt" />
+              <SelectValue placeholder={t('admin.sortBy', 'Sort by')} />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="created_desc" className="text-xs">{t('admin.newest', 'Newest First')}</SelectItem>
+              <SelectItem value="created_asc" className="text-xs">{t('admin.oldest', 'Oldest First')}</SelectItem>
+              <SelectItem value="name_asc" className="text-xs">{t('admin.nameAsc', 'Name (A–Z)')}</SelectItem>
+              <SelectItem value="name_desc" className="text-xs">{t('admin.nameDesc', 'Name (Z–A)')}</SelectItem>
+              <SelectItem value="category_asc" className="text-xs">{t('admin.categoryAsc', 'Category (A–Z)')}</SelectItem>
+              <SelectItem value="brand_asc" className="text-xs">{t('admin.brandAsc', 'Brand (A–Z)')}</SelectItem>
+              <SelectItem value="price_asc" className="text-xs">{t('admin.priceAsc', 'Price (Low to High)')}</SelectItem>
+              <SelectItem value="price_desc" className="text-xs">{t('admin.priceDesc', 'Price (High to Low)')}</SelectItem>
+              <SelectItem value="stock_desc" className="text-xs">{t('admin.stockDesc', 'Stock (High to Low)')}</SelectItem>
+              <SelectItem value="stock_asc" className="text-xs">{t('admin.stockAsc', 'Stock (Low to High)')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Reset Filters button if filtered */}
+          {isFiltered && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetFilters}
+              className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+              title={t('admin.clearFilters', 'Reset Filters')}
+            >
+              <X className="h-3.5 w-3.5 mr-1 text-volt" /> {t('admin.clearFilters', 'Reset')}
+            </Button>
+          )}
+
+          {/* Add Product Button */}
+          <Button onClick={openNew} className="bg-volt font-bold text-volt-fg hover:bg-volt-dim h-9 text-xs">
+            <Plus className="mr-1.5 h-4 w-4" /> {t('admin.addProduct')}
+          </Button>
+
+        </div>
+
+      </div>
+
+      {/* 2. SUMMARY COUNTER BAR & PAGE SIZE SELECTOR */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="bg-card text-foreground border-border font-bold">
+            <Package className="mr-1 h-3.5 w-3.5 text-volt" />
+            {totalProducts} {totalProducts === 1 ? 'Product' : 'Products'}
+          </Badge>
+          {isFiltered && (
+            <span className="text-[11px]">
+              (Filtered from <span className="font-semibold text-foreground">{products.length}</span> total)
+            </span>
+          )}
+          {totalProducts > 0 && (
+            <span className="hidden md:inline text-[11px] text-muted-foreground">
+              · Showing <span className="font-semibold text-foreground">{startIndex + 1}</span>–<span className="font-semibold text-foreground">{endIndex}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span>{t('admin.perPage', 'per page')}:</span>
+          <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+            <SelectTrigger className="w-[70px] h-7 bg-card border-border text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="10" className="text-xs">10</SelectItem>
+              <SelectItem value="25" className="text-xs">25</SelectItem>
+              <SelectItem value="50" className="text-xs">50</SelectItem>
+              <SelectItem value="100" className="text-xs">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* 3. PRODUCTS DATA TABLE */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16"></TableHead>
-              <TableHead>{t('admin.name')}</TableHead>
-              <TableHead>{t('admin.price')}</TableHead>
-              <TableHead>{t('admin.stock')}</TableHead>
-              <TableHead className="w-28"></TableHead>
+          <TableHeader className="bg-secondary/50">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="w-14"></TableHead>
+
+              {/* Product Name Column Sort */}
+              <TableHead
+                className="cursor-pointer font-bold text-foreground hover:text-volt transition-colors group select-none"
+                onClick={() => handleHeaderSort('name')}
+              >
+                {t('admin.name')} {getSortHeaderIcon('name')}
+              </TableHead>
+
+              {/* Category Column Sort */}
+              <TableHead
+                className="cursor-pointer font-bold text-foreground hover:text-volt transition-colors group select-none"
+                onClick={() => handleHeaderSort('category')}
+              >
+                <div className="flex items-center gap-1">
+                  <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('admin.category')} {getSortHeaderIcon('category')}
+                </div>
+              </TableHead>
+
+              {/* Brand Column Sort */}
+              <TableHead
+                className="cursor-pointer font-bold text-foreground hover:text-volt transition-colors group select-none"
+                onClick={() => handleHeaderSort('brand')}
+              >
+                <div className="flex items-center gap-1">
+                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('admin.brand')} {getSortHeaderIcon('brand')}
+                </div>
+              </TableHead>
+
+              {/* Price Column Sort */}
+              <TableHead
+                className="cursor-pointer font-bold text-foreground hover:text-volt transition-colors group select-none"
+                onClick={() => handleHeaderSort('price')}
+              >
+                {t('admin.price')} {getSortHeaderIcon('price')}
+              </TableHead>
+
+              {/* Stock Column Sort */}
+              <TableHead
+                className="cursor-pointer font-bold text-foreground hover:text-volt transition-colors group select-none"
+                onClick={() => handleHeaderSort('stock')}
+              >
+                {t('admin.stock')} {getSortHeaderIcon('stock')}
+              </TableHead>
+
+              <TableHead className="w-28 text-right pr-4 font-bold text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {products.map((p) => (
-              <TableRow
-                key={p.id}
-                onClick={() => {
-                  setPreviewProduct(p)
-                  setPreviewImageIdx(0)
-                }}
-                className="cursor-pointer hover:bg-secondary/60 transition-colors"
-              >
-                <TableCell>
-                  <div className="h-10 w-10 overflow-hidden rounded bg-secondary">
-                    {p.images[0] && <img src={p.images[0]} alt="" className="h-full w-full object-cover" />}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">
-                  {p.name}
-                  {p.is_featured && <span className="ml-2 text-volt">★</span>}
-                </TableCell>
-                <TableCell>{formatPrice(Number(p.price), i18n.language)}</TableCell>
-                <TableCell>{p.stock}</TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        setPreviewProduct(p)
-                        setPreviewImageIdx(0)
-                      }}
-                      title={t('admin.previewProduct')}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => setDeleteTargetId(p.id)}
-                        title={t('admin.delete')}
-                      >
-                        <Trash2 className="h-4 w-4" />
+            {paginatedProducts.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-44 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Package className="h-8 w-8 text-muted-foreground/40" />
+                    <p className="font-semibold text-sm text-foreground">
+                      {t('admin.noProductsFound', 'No products match your search or filter criteria.')}
+                    </p>
+                    {isFiltered && (
+                      <Button variant="outline" size="sm" onClick={resetFilters} className="mt-1 text-xs">
+                        {t('admin.clearFilters', 'Reset Filters')}
                       </Button>
                     )}
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              paginatedProducts.map((p) => {
+                const categoryName = p.category_id ? categoryMap.get(p.category_id) : undefined
+                const brandName = p.brand_id ? brandMap.get(p.brand_id) : undefined
+
+                return (
+                  <TableRow
+                    key={p.id}
+                    onClick={() => {
+                      setPreviewProduct(p)
+                      setPreviewImageIdx(0)
+                    }}
+                    className="cursor-pointer hover:bg-secondary/60 transition-colors"
+                  >
+                    {/* Thumbnail Image */}
+                    <TableCell className="py-2.5">
+                      <div className="h-11 w-11 overflow-hidden rounded-md border border-border bg-secondary flex items-center justify-center">
+                        {p.images[0] ? (
+                          <img src={p.images[0]} alt="" className="h-full w-full object-contain p-0.5" />
+                        ) : (
+                          <Package className="h-5 w-5 text-muted-foreground/40" />
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Product Name & Featured Star */}
+                    <TableCell className="font-semibold text-xs py-2.5 max-w-[240px]">
+                      <div className="line-clamp-2 leading-tight">
+                        {p.name}
+                        {p.is_featured && (
+                          <span className="ml-1.5 inline-flex items-center rounded bg-volt/20 px-1.5 py-0.2 text-[10px] font-extrabold text-volt border border-volt/40">
+                            ★ Featured
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Category */}
+                    <TableCell className="py-2.5 text-xs">
+                      {categoryName ? (
+                        <Badge variant="secondary" className="font-semibold text-[11px]">
+                          {categoryName}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-[11px]">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Brand */}
+                    <TableCell className="py-2.5 text-xs">
+                      {brandName ? (
+                        <Badge variant="outline" className="font-semibold text-[11px] border-border/80">
+                          {brandName}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-[11px]">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Price */}
+                    <TableCell className="font-display font-extrabold text-volt text-xs py-2.5">
+                      {formatPrice(Number(p.price), i18n.language)}
+                    </TableCell>
+
+                    {/* Stock Status Badge */}
+                    <TableCell className="py-2.5">
+                      <StockBadge stock={p.stock} />
+                    </TableCell>
+
+                    {/* Action Buttons */}
+                    <TableCell className="py-2.5 text-right pr-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => {
+                            setPreviewProduct(p)
+                            setPreviewImageIdx(0)
+                          }}
+                          title={t('admin.previewProduct')}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-volt"
+                          onClick={() => openEdit(p)}
+                          title={t('admin.edit')}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeleteTargetId(p.id)}
+                            title={t('admin.delete')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
           </TableBody>
         </Table>
       </div>
 
+      {/* 4. PAGINATION FOOTER CONTROLS */}
+      {totalPages > 1 && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-3 shadow-sm text-xs">
+          <div className="text-muted-foreground text-center sm:text-left">
+            {t('admin.page', { current: safePage, total: totalPages })}
+            <span className="ml-2 font-medium text-foreground">
+              ({startIndex + 1}–{endIndex} of {totalProducts})
+            </span>
+          </div>
+
+          <div className="flex items-center justify-center gap-1">
+            {/* First Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(1)}
+              disabled={safePage === 1}
+              title="First Page"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+
+            {/* Previous Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              title="Previous Page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* Page Number Buttons */}
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const pageNum = idx + 1
+              // Show limited page buttons around current page
+              if (
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                (pageNum >= safePage - 1 && pageNum <= safePage + 1)
+              ) {
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === safePage ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`h-8 min-w-8 text-xs font-bold ${
+                      pageNum === safePage ? 'bg-volt text-volt-fg hover:bg-volt-dim' : ''
+                    }`}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              }
+              if (pageNum === safePage - 2 || pageNum === safePage + 2) {
+                return <span key={pageNum} className="px-1 text-muted-foreground">...</span>
+              }
+              return null
+            })}
+
+            {/* Next Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              title="Next Page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            {/* Last Page */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={safePage === totalPages}
+              title="Last Page"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Product Edit / Add Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
@@ -376,7 +909,7 @@ export default function ProductsTab() {
               <Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1.5 bg-secondary" />
             </div>
 
-            {/* Category Static Specs + Additional Custom Key-Value Specs */}
+            {/* Category Static Specs + Custom Key-Value Specs */}
             <div className="sm:col-span-2 rounded-md border border-border bg-secondary/30 p-4 space-y-4">
               <div>
                 <Label className="font-display font-bold text-sm">{t('admin.specs')}</Label>
@@ -448,6 +981,57 @@ export default function ProductsTab() {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* PC Builder Component Role & Compatibility Options */}
+            <div className="sm:col-span-2 rounded-md border border-volt/40 bg-volt/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 text-volt" />
+                <Label className="font-display font-bold text-sm text-foreground">PC Builder Specs & Slot Option</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set whether this product is available as a component in the Custom PC Builder and specify compatibility details.
+              </p>
+              
+              <div className="grid gap-3 sm:grid-cols-3 pt-1">
+                <div>
+                  <Label className="text-xs font-semibold">PC Builder Slot</Label>
+                  <Select value={form.builder_slot} onValueChange={(v) => setForm({ ...form, builder_slot: v })}>
+                    <SelectTrigger className="mt-1 bg-background text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none" className="text-xs">None (Regular Item)</SelectItem>
+                      <SelectItem value="cpu" className="text-xs">CPU (Processeur)</SelectItem>
+                      <SelectItem value="cooler" className="text-xs">Cooler (Refroidissement)</SelectItem>
+                      <SelectItem value="motherboard" className="text-xs">Motherboard (Carte Mère)</SelectItem>
+                      <SelectItem value="ram" className="text-xs">RAM (Mémoire Vive)</SelectItem>
+                      <SelectItem value="gpu" className="text-xs">GPU (Carte Graphique)</SelectItem>
+                      <SelectItem value="storage" className="text-xs">Storage (SSD / HDD)</SelectItem>
+                      <SelectItem value="psu" className="text-xs">PSU (Alimentation)</SelectItem>
+                      <SelectItem value="case" className="text-xs">Case (Boîtier PC)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold">Socket / Platform</Label>
+                  <Input
+                    value={form.socket}
+                    onChange={(e) => setForm({ ...form, socket: e.target.value })}
+                    placeholder="e.g. AM5, LGA1700"
+                    className="mt-1 bg-background text-xs"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold">Watts / Capacity</Label>
+                  <Input
+                    value={form.watts}
+                    onChange={(e) => setForm({ ...form, watts: e.target.value })}
+                    placeholder="e.g. 120W (TDP) or 850W (PSU)"
+                    className="mt-1 bg-background text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -623,6 +1207,7 @@ export default function ProductsTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
     </div>
   )
 }

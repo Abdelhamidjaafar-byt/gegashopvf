@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Heart, Minus, Plus, ShoppingCart, Truck } from 'lucide-react'
+import { Heart, Minus, Plus, ShoppingCart, Truck, Sliders } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProducts, useBrands, useCategories } from '@/hooks/useCatalog'
 import { useReviews } from '@/hooks/useReviews'
@@ -127,7 +127,7 @@ export default function ProductPage() {
           <div className="mt-2"><StockBadge stock={product.stock} /></div>
           <p className="mt-5 leading-relaxed text-muted-foreground">{product.description}</p>
 
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="flex items-center rounded-md border border-border">
               <Button variant="ghost" size="icon" onClick={() => setQty(Math.max(1, qty - 1))}>
                 <Minus className="h-4 w-4" />
@@ -148,6 +148,18 @@ export default function ProductPage() {
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> {t('product.addToCart')}
             </Button>
+
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="border-volt/60 bg-volt/10 text-volt hover:bg-volt hover:text-volt-fg font-bold"
+            >
+              <Link to="/builder">
+                <Sliders className="mr-2 h-4 w-4" /> Build PC
+              </Link>
+            </Button>
+
             <Button
               size="lg"
               variant="outline"
