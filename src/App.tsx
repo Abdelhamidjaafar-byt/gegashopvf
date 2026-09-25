@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router'
+import { Analytics } from '@vercel/analytics/react'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
@@ -54,6 +55,7 @@ export default function App() {
         <CartProvider>
           <WishlistProvider>
             <AppContent />
+            <Analytics />
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>
