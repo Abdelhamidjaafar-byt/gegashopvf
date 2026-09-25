@@ -5,7 +5,7 @@ import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, STORE_PHONE_DISPLAY
 export default function BetaSEOFooter() {
   return (
     <footer className="mt-16 border-t border-border bg-card/60">
-      
+
       {/* 1. SEO TEXT BLOCK */}
       <div className="border-b border-border/80 bg-background/50 py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -48,7 +48,7 @@ export default function BetaSEOFooter() {
       {/* 2. FOOTER COLUMNS & NAVIGATION */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          
+
           {/* Column 1: Store & Socials */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-extrabold tracking-tight">
@@ -131,7 +131,7 @@ export default function BetaSEOFooter() {
             <h4 className="font-display text-xs font-bold uppercase tracking-wider text-foreground">
               Oujda Store & Contact
             </h4>
-            
+
             <a
               href={STORE_MAPS_URL}
               target="_blank"

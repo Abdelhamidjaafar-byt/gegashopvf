@@ -38,11 +38,11 @@ export default function BetaSidebar() {
 
   return (
     <aside className="space-y-6">
-      
+
       {/* 1. FEATURED AUDIO BANNER (JBL / HIGH-END PROMO) */}
       <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-violet-950/80 via-slate-900 to-black p-5 text-white shadow-lg">
         <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
-        
+
         <span className="inline-flex items-center gap-1.5 rounded-md bg-purple-500/20 border border-purple-400/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-300">
           <Headphones className="h-3 w-3 text-purple-400" /> Audio Spotlight
         </span>

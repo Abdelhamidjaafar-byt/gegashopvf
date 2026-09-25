@@ -126,13 +126,13 @@ export default function BetaHero() {
   return (
     <section className="mx-auto max-w-7xl px-4 pt-4 pb-8 sm:px-6">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        
+
         {/* ============================================================ */}
         {/* CARD 1: FLASH SALE DEAL OF THE DAY (LEFT - 3 COLS ON LG) */}
         {/* ============================================================ */}
         <div className="lg:col-span-3 flex flex-col justify-between overflow-hidden rounded-xl border border-volt/30 bg-card/90 p-5 shadow-lg relative group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-volt/10 rounded-full blur-2xl pointer-events-none" />
-          
+
           <div>
             {/* Header Badge */}
             <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
@@ -236,7 +236,7 @@ export default function BetaHero() {
         {/* ============================================================ */}
         {/* CARD 2: MAIN HERO BANNER CAROUSEL (CENTER - 6 COLS ON LG) */}
         {/* ============================================================ */}
-        <div className="lg:col-span-6 relative flex flex-col justify-between overflow-hidden rounded-xl border border-border bg-card p-6 md:p-8 min-h-[380px]">
+        <div className="lg:col-span-6 relative flex flex-col justify-between overflow-hidden rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-950 via-neutral-900 to-black p-6 md:p-8 min-h-[380px] text-white shadow-xl group">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide.id}
@@ -249,29 +249,29 @@ export default function BetaHero() {
               <img
                 src={currentSlide.image}
                 alt={currentSlide.title}
-                className="h-full w-full object-cover opacity-25 dark:opacity-30 filter brightness-90"
+                className="h-full w-full object-cover opacity-60 filter brightness-105 group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/80 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-r from-card via-card/60 to-transparent" />
+              {/* <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" /> */}
+              {/* <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" /> */}
             </motion.div>
           </AnimatePresence>
 
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-volt/15 border border-volt/40 px-2.5 py-0.5 text-xs font-bold text-volt">
+                <span className="inline-flex items-center gap-1 rounded-md bg-volt/20 border border-volt/40 px-2.5 py-0.5 text-xs font-bold text-volt">
                   <Sparkles className="h-3 w-3" /> {currentSlide.badge}
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                <span className="text-xs font-semibold uppercase tracking-widest text-zinc-300">
                   {currentSlide.tag}
                 </span>
               </div>
 
-              <h1 className="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">
+              <h1 className="mt-4 font-display text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.1] text-white">
                 {currentSlide.title}
               </h1>
 
-              <p className="mt-3 max-w-lg text-sm text-muted-foreground md:text-base line-clamp-3">
+              <p className="mt-3 max-w-lg text-sm text-zinc-300 md:text-base line-clamp-3 leading-relaxed">
                 {currentSlide.subtitle}
               </p>
 
@@ -279,28 +279,28 @@ export default function BetaHero() {
                 <span className="font-display text-2xl md:text-3xl font-extrabold text-volt">
                   {currentSlide.price}
                 </span>
-                <span className="text-sm text-muted-foreground line-through">
+                <span className="text-sm text-zinc-400 line-through">
                   {currentSlide.oldPrice}
                 </span>
-                <span className="rounded bg-emerald-500/20 text-emerald-400 px-2 py-0.5 text-xs font-bold">
+                <span className="rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-xs font-bold">
                   Free Shipping Morocco
                 </span>
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-between border-t border-border/60 pt-4">
+            <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-4">
               <div className="flex items-center gap-3">
                 <Link
                   to={currentSlide.link}
-                  className="inline-flex items-center gap-2 rounded-lg bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105"
+                  className="inline-flex items-center gap-2 rounded-lg bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105 shadow-md"
                 >
                   Discover <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   to="/builder"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/80 px-4 py-2.5 text-xs font-bold hover:border-volt hover:text-volt transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 backdrop-blur px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
                 >
-                  <Sliders className="h-3.5 w-3.5" /> PC Builder
+                  <Sliders className="h-3.5 w-3.5 text-volt" /> PC Builder
                 </Link>
               </div>
 
@@ -311,9 +311,8 @@ export default function BetaHero() {
                     key={idx}
                     onClick={() => setActiveSlideIdx(idx)}
                     aria-label={`Slide ${idx + 1}`}
-                    className={`h-2 transition-all rounded-full ${
-                      idx === activeSlideIdx ? 'w-6 bg-volt' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground'
-                    }`}
+                    className={`h-2 transition-all rounded-full ${idx === activeSlideIdx ? 'w-6 bg-volt' : 'w-2 bg-muted-foreground/30 hover:bg-muted-foreground'
+                      }`}
                   />
                 ))}
               </div>
@@ -325,7 +324,7 @@ export default function BetaHero() {
         {/* CARD 3 & 4: RIGHT SIDE (3 COLS ON LG: CATEGORY CIRCLES + PICK OF WEEK) */}
         {/* ============================================================ */}
         <div className="lg:col-span-3 flex flex-col gap-4">
-          
+
           {/* QUICK CATEGORY CIRCLES GRID */}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">

@@ -51,11 +51,11 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      
+
       {/* 1. TOP ANNOUNCEMENT / SECONDARY BAR */}
       <div className="hidden border-b border-border/60 bg-secondary/50 text-[11px] text-muted-foreground sm:block">
         <div className="mx-auto flex h-8 max-w-7xl items-center justify-between px-4 sm:px-6">
-          
+
           {/* Top Left Menu */}
           <div className="flex items-center gap-4">
             <Link to="/shop" className="hover:text-volt transition-colors font-medium">About Us</Link>
@@ -92,7 +92,7 @@ export default function Navbar() {
 
       {/* 2. MAIN HEADER ROW (LOGO, SEARCH, PHONE SUPPORT, CART) */}
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        
+
         {/* BRAND LOGO */}
         <Link to="/" className="flex items-center gap-2.5">
           <img src="/logo.png" alt="ElectroGega" className="h-9 w-auto max-w-[140px] object-contain" />
@@ -126,7 +126,7 @@ export default function Navbar() {
 
         {/* RIGHT SIDE ACTIONS: SUPPORT 24/7 & CART */}
         <div className="flex items-center gap-3">
-          
+
           {/* PHONE SUPPORT BOX */}
           <div className="hidden xl:flex items-center gap-2 border-r border-border/80 pr-4">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-volt/10 text-volt border border-volt/30">
@@ -259,7 +259,7 @@ export default function Navbar() {
       {/* 3. CATEGORIES NAVIGATION RIBBON */}
       <div className="hidden border-t border-border/80 bg-secondary/40 lg:block">
         <div className="mx-auto flex h-10 max-w-7xl items-center justify-between px-4 sm:px-6 text-xs">
-          
+
           <div className="flex items-center gap-6">
             <CategoriesMenuDesktop />
             <Link to="/shop" className="font-semibold text-foreground hover:text-volt transition-colors">
