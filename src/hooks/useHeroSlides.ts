@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, channelName } from '@/lib/supabase'
 import type { HeroSlide } from '@/types/hero'
 
 const STORAGE_KEY = 'electrogega_hero_slides'
@@ -52,7 +52,7 @@ export function useHeroSlides() {
         .from('site_settings')
         .select('value')
         .eq('key', 'hero_slides')
-        .single()
+        .maybeSingle()
 
       if (!error && data?.value && Array.isArray(data.value) && data.value.length > 0) {
         setSlides(data.value)
@@ -73,7 +73,7 @@ export function useHeroSlides() {
     fetchSlides()
 
     const channel = supabase
-      .channel('hero_slides_changes')
+      .channel(channelName('hero_slides'))
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'site_settings', filter: 'key=eq.hero_slides' },

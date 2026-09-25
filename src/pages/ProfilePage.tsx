@@ -9,7 +9,7 @@ import { useMyOrders, cancelOrder } from '@/hooks/useOrders'
 import { useAddresses } from '@/hooks/useAddresses'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useProducts } from '@/hooks/useCatalog'
-import { formatPrice, formatDate } from '@/lib/format'
+import { formatPrice, formatDate, getProductUrl } from '@/lib/format'
 import type { Address, Order, OrderStatus } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
@@ -461,7 +461,7 @@ export default function ProfilePage() {
                         <span className="font-bold text-sm">{formatPrice(item.price * item.qty, i18n.language)}</span>
                         {item.product_id && (
                           <Button asChild variant="ghost" size="sm" className="h-8 text-xs text-volt hover:text-volt hover:bg-volt/10">
-                            <Link to={`/product/${item.product_id}`} target="_blank">
+                            <Link to={getProductUrl({ id: item.product_id, name: item.name })} target="_blank">
                               <ExternalLink className="mr-1 h-3.5 w-3.5" />
                               {t('profile.viewProduct')}
                             </Link>

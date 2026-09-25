@@ -74,8 +74,9 @@ function saveLocalOffers(offers: Offer[]) {
 }
 
 export function useOffers() {
-  const [offers, setOffers] = useState<Offer[]>([])
-  const [loading, setLoading] = useState(true)
+  const initial = getStoredLocalOffers()
+  const [offers, setOffers] = useState<Offer[]>(initial)
+  const [loading, setLoading] = useState(initial.length === 0)
   const [error, setError] = useState<string | null>(null)
 
   const refetch = useCallback(async () => {
@@ -87,12 +88,13 @@ export function useOffers() {
 
       if (err || !data || data.length === 0) {
         if (err) setError(err.message)
-        // Fallback to local storage/default offers
         const local = getStoredLocalOffers()
         setOffers(local)
       } else {
         setError(null)
-        setOffers(data as Offer[])
+        const list = data as Offer[]
+        saveLocalOffers(list)
+        setOffers(list)
       }
     } catch (e: any) {
       setError(e?.message || 'Failed to fetch offers')
@@ -105,13 +107,12 @@ export function useOffers() {
 
   useEffect(() => {
     refetch()
-    const client = supabase
-    const channel = client
+    const channel = supabase
       .channel(channelName('offers'))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => refetch())
       .subscribe()
     return () => {
-      client.removeChannel(channel)
+      supabase.removeChannel(channel)
     }
   }, [refetch])
 

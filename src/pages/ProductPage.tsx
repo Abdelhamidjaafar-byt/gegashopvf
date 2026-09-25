@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Heart, Minus, Plus, ShoppingCart, Truck, Sliders } from 'lucide-react'
+import { Heart, Minus, Plus, ShoppingCart, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useProducts, useBrands, useCategories } from '@/hooks/useCatalog'
 import { useReviews } from '@/hooks/useReviews'
@@ -9,7 +9,7 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatPrice, formatDate } from '@/lib/format'
+import { formatPrice, formatDate, slugify } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,7 +24,6 @@ export default function ProductPage() {
   const { products, loading } = useProducts()
   const { brands } = useBrands()
   const { categories } = useCategories()
-  const { reviews, average, addReview } = useReviews(id)
   const { track } = useRecentlyViewed()
   const { add } = useCart()
   const { has, toggle } = useWishlist()
@@ -36,15 +35,25 @@ export default function ProductPage() {
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const product = products.find((p) => p.id === id)
+  const product = useMemo(() => {
+    if (!id) return undefined
+    const param = decodeURIComponent(id).toLowerCase().trim()
+    const byId = products.find((p) => p.id === id || p.id.toLowerCase() === param)
+    if (byId) return byId
+    const bySlug = products.find((p) => slugify(p.name) === param)
+    if (bySlug) return bySlug
+    return products.find((p) => param.includes(p.id) || param.includes(slugify(p.name)))
+  }, [products, id])
+
+  const { reviews, average, addReview } = useReviews(product?.id || id)
 
   useEffect(() => {
-    if (id) track(id)
-  }, [id, track])
+    if (product?.id) track(product.id)
+  }, [product?.id, track])
 
   const related = useMemo(
-    () => products.filter((p) => p.id !== id && p.category_id === product?.category_id).slice(0, 4),
-    [products, id, product],
+    () => products.filter((p) => p.id !== product?.id && p.category_id === product?.category_id).slice(0, 4),
+    [products, product],
   )
 
   if (loading) {
@@ -147,17 +156,6 @@ export default function ProductPage() {
               }}
             >
               <ShoppingCart className="mr-2 h-5 w-5" /> {t('product.addToCart')}
-            </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="border-volt/60 bg-volt/10 text-volt hover:bg-volt hover:text-volt-fg font-bold"
-            >
-              <Link to="/builder">
-                <Sliders className="mr-2 h-4 w-4" /> Build PC
-              </Link>
             </Button>
 
             <Button

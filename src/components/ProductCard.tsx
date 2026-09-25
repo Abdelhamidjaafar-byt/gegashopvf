@@ -8,7 +8,7 @@ import type { Product } from '@/types'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import QuickView from './QuickView'
 
@@ -54,7 +54,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
         transition={{ duration: 0.35, delay: (index % 4) * 0.05 }}
       >
         <Link
-          to={`/product/${product.id}`}
+          to={getProductUrl(product)}
           className="group block overflow-hidden rounded-md border border-border bg-card transition-colors hover:border-volt/60"
         >
           <div className="relative aspect-square overflow-hidden bg-secondary">

@@ -23,7 +23,7 @@ type Sort = 'newest' | 'price-asc' | 'price-desc' | 'name'
 
 export default function ShopPage() {
   const { t } = useTranslation()
-  const [params] = useSearchParams()
+  const [params, setSearchParams] = useSearchParams()
   const { products, loading } = useProducts()
   const { categories } = useCategories()
   const { brands } = useBrands()
@@ -61,13 +61,81 @@ export default function ShopPage() {
     return map
   }, [categories])
 
-  // Category ids covered by the current selection (a parent includes its children)
+  // Synchronize state when URL search params change (e.g. clicking category link from anywhere)
+  useEffect(() => {
+    const cat = params.get('category') || 'all'
+    setCategory(cat)
+
+    const query = params.get('q') || ''
+    setQ(query)
+
+    const b = params.get('brand')
+    setBrandIds(b && b !== 'all' ? [b] : [])
+  }, [params])
+
+  // Category ids covered by the current selection (a parent includes its children and grandchildren)
   const selectedCatIds = useMemo(() => {
-    if (category === 'all') return null
-    const ids = new Set([category])
-    for (const child of childrenOf.get(category) || []) ids.add(child.id)
+    if (!category || category === 'all') return null
+    const normCategory = category.toLowerCase().trim()
+    const ids = new Set<string>()
+
+    // 1. Match by category ID, slug, or normalized name
+    for (const c of categories) {
+      const cId = c.id.toLowerCase()
+      const cName = c.name.toLowerCase()
+      const cSlug = (c.slug || '').toLowerCase()
+      const normNameSlug = cName.replace(/[^a-z0-9]+/g, '-')
+
+      if (
+        cId === normCategory ||
+        cSlug === normCategory ||
+        normNameSlug === normCategory ||
+        cName === normCategory
+      ) {
+        ids.add(c.id)
+      }
+    }
+
+    // 2. Preset category keyword matching if slug/id didn't match directly
+    for (const c of categories) {
+      const cName = c.name.toLowerCase()
+      const cSlug = (c.slug || '').toLowerCase()
+
+      if (
+        (normCategory === 'pc-gamer' && (cName.includes('pc') || cName.includes('gamer') || cSlug.includes('gamer'))) ||
+        (normCategory === 'laptops' && (cName.includes('laptop') || cName.includes('portable') || cSlug.includes('laptop'))) ||
+        (normCategory === 'composants' && (cName.includes('composant') || cName.includes('component') || cName.includes('gpu') || cName.includes('cpu') || cName.includes('carte') || cName.includes('processeur'))) ||
+        (normCategory === 'displays-tv' && (cName.includes('ecran') || cName.includes('display') || cName.includes('monitor') || cName.includes('tv'))) ||
+        (normCategory === 'peripheriques' && (cName.includes('peripheric') || cName.includes('accessoir') || cName.includes('souris') || cName.includes('clavier'))) ||
+        ((normCategory === 'apple' || normCategory === 'univers-apple-mac' || normCategory.includes('apple') || normCategory.includes('mac')) && (cName.includes('apple') || cName.includes('mac') || cSlug.includes('apple') || cSlug.includes('mac'))) ||
+        ((normCategory === 'chairs' || normCategory === 'chaises-et-bureaux' || normCategory.includes('chaise')) && (cName.includes('chaise') || cName.includes('bureau') || cName.includes('chair') || cSlug.includes('chaise'))) ||
+        ((normCategory === 'consoles' || normCategory === 'console-et-jeux' || normCategory.includes('console')) && (cName.includes('console') || cName.includes('playstation') || cName.includes('xbox') || cName.includes('nintendo') || cSlug.includes('console')))
+      ) {
+        ids.add(c.id)
+      }
+    }
+
+    // Always include raw category string
+    ids.add(category)
+
+    // 3. Recursively collect all descendant category IDs
+    const queue = Array.from(ids)
+    const visited = new Set<string>(queue)
+
+    while (queue.length > 0) {
+      const parentId = queue.shift()!
+      const children = childrenOf.get(parentId) || []
+      for (const child of children) {
+        if (!visited.has(child.id)) {
+          visited.add(child.id)
+          ids.add(child.id)
+          queue.push(child.id)
+        }
+      }
+    }
+
     return ids
-  }, [category, childrenOf])
+  }, [category, categories, childrenOf])
 
   // Compute available spec keys & unique values for the selected category
   const availableSpecs = useMemo(() => {
@@ -100,17 +168,20 @@ export default function ShopPage() {
 
   // Auto-expand the branch of the category coming from the URL & toggle specs filter
   useEffect(() => {
-    if (category === 'all') {
+    if (!category || category === 'all') {
       setIsSpecsOpen(false)
       setSelectedSpecs({})
       return
     }
     setIsSpecsOpen(true)
-    const current = categories.find((c) => c.id === category)
+    const normCat = category.toLowerCase().trim()
+    const current = categories.find((c) => c.id.toLowerCase() === normCat || c.slug?.toLowerCase() === normCat)
+    const targetId = current?.id || category
+
     setExpanded((prev) => {
       const next = new Set(prev)
       if (current?.parent_id) next.add(current.parent_id)
-      if (childrenOf.has(category)) next.add(category)
+      if (childrenOf.has(targetId)) next.add(targetId)
       return [...next]
     })
   }, [category, categories, childrenOf])
@@ -166,17 +237,29 @@ export default function ShopPage() {
   }
 
   const pickCategory = (id: string) => {
-    setCategory(id)
+    const catObj = categories.find((c) => c.id === id || c.slug === id)
+    const categoryParam = catObj?.slug || id
+
+    setCategory(categoryParam)
     setSelectedSpecs({}) // Reset spec filters when category changes
+
+    const newParams = new URLSearchParams(params)
+    if (id === 'all') {
+      newParams.delete('category')
+    } else {
+      newParams.set('category', categoryParam)
+    }
+    setSearchParams(newParams, { replace: true })
+
     if (id === 'all') return
-    const cat = categories.find((c) => c.id === id)
+    const cat = catObj || categories.find((c) => c.id === id)
     setExpanded((prev) => {
       const next = new Set(prev)
       if (cat?.parent_id) next.add(cat.parent_id)
-      if (childrenOf.has(id)) {
-        // toggle: re-clicking an expanded parent collapses it
-        if (next.has(id) && category === id) next.delete(id)
-        else next.add(id)
+      const targetId = cat ? cat.id : id
+      if (childrenOf.has(targetId)) {
+        if (next.has(targetId) && (category === targetId || category === cat?.slug)) next.delete(targetId)
+        else next.add(targetId)
       }
       return [...next]
     })
@@ -200,6 +283,7 @@ export default function ShopPage() {
     setBrandIds([])
     setRange(null)
     setSelectedSpecs({})
+    setSearchParams({}, { replace: true })
   }
 
   const filtered = useMemo(() => {
@@ -211,7 +295,52 @@ export default function ShopPage() {
         (p) => p.name.toLowerCase().includes(needle) || p.description.toLowerCase().includes(needle),
       )
     }
-    if (selectedCatIds) list = list.filter((p) => p.category_id && selectedCatIds.has(p.category_id))
+
+    if (category && category !== 'all') {
+      const normCat = category.toLowerCase().trim()
+      const isPcGamer = normCat === 'pc-gamer' || normCat.includes('pc-gamer') || normCat.includes('gamer')
+      const isLaptops = normCat === 'laptops' || normCat.includes('laptop')
+      const isComposants = normCat === 'composants' || normCat.includes('composant')
+      const isDisplays = normCat === 'displays-tv' || normCat.includes('display') || normCat.includes('ecran') || normCat.includes('monitor')
+      const isApple = normCat === 'apple' || normCat === 'univers-apple-mac' || normCat.includes('apple') || normCat.includes('mac')
+      const isChairs = normCat === 'chairs' || normCat === 'chaises-et-bureaux' || normCat.includes('chaise') || normCat.includes('bureau') || normCat.includes('chair')
+      const isConsoles = normCat === 'consoles' || normCat === 'console-et-jeux' || normCat.includes('console') || normCat.includes('jeu')
+
+      list = list.filter((p) => {
+        // 1. Direct ID match from selectedCatIds (includes recursively expanded subcategories)
+        if (p.category_id && selectedCatIds && selectedCatIds.has(p.category_id)) return true
+
+        // 2. Keyword fallbacks based on product details if category_id isn't directly set or is null
+        const pName = p.name.toLowerCase()
+        const pDesc = (p.description || '').toLowerCase()
+        const pCat = (p.category_id || '').toLowerCase()
+
+        if (isPcGamer) {
+          return pCat.includes('gamer') || pCat.includes('pc') || pName.includes('pc') || pName.includes('rtx') || pName.includes('ryzen') || pName.includes('intel') || pName.includes('gamer') || pDesc.includes('pc gamer') || pName.includes('nitro') || pName.includes('rog') || pName.includes('victus') || pName.includes('legion') || pName.includes('katana') || pName.includes('omen')
+        }
+        if (isLaptops) {
+          return pCat.includes('laptop') || pName.includes('laptop') || pName.includes('macbook') || pName.includes('notebook') || pName.includes('book') || pName.includes('thinkpad') || pName.includes('elitebook') || pName.includes('latitude') || pDesc.includes('laptop')
+        }
+        if (isComposants) {
+          return pCat.includes('composant') || pCat.includes('component') || pName.includes('rtx') || pName.includes('gtx') || pName.includes('core') || pName.includes('ryzen') || pName.includes('ram') || pName.includes('ssd') || pName.includes('motherboard') || pName.includes('gpu') || pName.includes('cpu')
+        }
+        if (isDisplays) {
+          return pCat.includes('ecran') || pCat.includes('monitor') || pName.includes('monitor') || pName.includes('hz') || pName.includes('oled') || pName.includes('tv') || pName.includes('qhd') || pName.includes('fhd') || pName.includes('4k')
+        }
+        if (isApple) {
+          return pCat.includes('apple') || pCat.includes('mac') || pName.includes('apple') || pName.includes('macbook') || pName.includes('mac') || pName.includes('imac') || pName.includes('ipad') || pDesc.includes('apple') || pDesc.includes('macbook')
+        }
+        if (isChairs) {
+          return pCat.includes('chaise') || pCat.includes('bureau') || pName.includes('chaise') || pName.includes('bureau') || pName.includes('chair') || pName.includes('desk') || pDesc.includes('chair')
+        }
+        if (isConsoles) {
+          return pCat.includes('console') || pCat.includes('jeu') || pName.includes('ps5') || pName.includes('playstation') || pName.includes('xbox') || pName.includes('nintendo') || pName.includes('switch') || pName.includes('rog ally') || pName.includes('legion go') || pDesc.includes('console')
+        }
+
+        return false
+      })
+    }
+
     if (brandIds.length > 0) list = list.filter((p) => p.brand_id && brandIds.includes(p.brand_id))
     list = list.filter((p) => Number(p.price) >= minVal && Number(p.price) <= maxVal)
 
@@ -240,22 +369,34 @@ export default function ShopPage() {
         list.sort((a, b) => b.created_at.localeCompare(a.created_at))
     }
     return list
-  }, [products, q, selectedCatIds, brandIds, selectedSpecs, sort, minVal, maxVal, featuredOnly])
+  }, [products, q, category, selectedCatIds, brandIds, selectedSpecs, sort, minVal, maxVal, featuredOnly])
 
   const catButton = (
     id: string,
     label: string,
     opts: { child?: boolean; parentAll?: boolean } = {},
   ) => {
-    const active = category === id
+    const catObj = categories.find((c) => c.id === id)
+    const normCategory = category.toLowerCase().trim()
+
+    const active =
+      category === id ||
+      (catObj && catObj.slug?.toLowerCase() === normCategory) ||
+      (catObj && catObj.id.toLowerCase() === normCategory)
+
     // A parent is shown active when itself OR any of its children is selected
     const branchActive =
-      !opts.child && (active || (childrenOf.get(id) || []).some((c) => c.id === category))
+      !opts.child &&
+      (active ||
+        (childrenOf.get(id) || []).some(
+          (c) => c.id === category || c.slug?.toLowerCase() === normCategory || c.id.toLowerCase() === normCategory,
+        ))
     const highlighted = opts.child ? active : branchActive
+
     return (
       <button
         key={id + label}
-        onClick={() => pickCategory(id)}
+        onClick={() => pickCategory(catObj?.slug || id)}
         className={cn(
           'block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors',
           opts.child && 'pl-7 text-muted-foreground hover:text-foreground',

@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Minus, Plus, Trash2 } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 
@@ -29,11 +29,11 @@ export default function CartPage() {
         <div className="space-y-4 lg:col-span-2">
           {items.map(({ product, qty }) => (
             <div key={product.id} className="flex gap-4 rounded-md border border-border bg-card p-4">
-              <Link to={`/product/${product.id}`} className="h-24 w-24 shrink-0 overflow-hidden rounded bg-secondary">
+              <Link to={getProductUrl(product)} className="h-24 w-24 shrink-0 overflow-hidden rounded bg-secondary">
                 {product.images[0] && <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />}
               </Link>
               <div className="flex flex-1 flex-col">
-                <Link to={`/product/${product.id}`} className="font-medium hover:text-volt">{product.name}</Link>
+                <Link to={getProductUrl(product)} className="font-medium hover:text-volt">{product.name}</Link>
                 <span className="mt-1 text-sm text-muted-foreground">
                   {formatPrice(Number(product.price), i18n.language)}
                 </span>

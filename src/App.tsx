@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
@@ -20,9 +22,17 @@ import AuthPage from '@/pages/AuthPage'
 import ResetPasswordPage from '@/pages/ResetPasswordPage'
 import ProfilePage from '@/pages/ProfilePage'
 import AdminPage from '@/pages/AdminPage'
+import GuidesPage from '@/pages/GuidesPage'
+import GuideDetailPage from '@/pages/GuideDetailPage'
 import '@/i18n'
 
 function AppContent() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname])
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground transition-colors duration-200">
       <Navbar />
@@ -33,6 +43,8 @@ function AppContent() {
           <Route path="/deals" element={<DealsPage />} />
           <Route path="/builder" element={<BuilderPage />} />
           <Route path="/product/:id" element={<ProductPage />} />
+          <Route path="/guides" element={<GuidesPage />} />
+          <Route path="/guides/:id" element={<GuideDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/auth" element={<AuthPage />} />

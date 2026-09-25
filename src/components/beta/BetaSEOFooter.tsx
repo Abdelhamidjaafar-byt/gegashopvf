@@ -1,8 +1,49 @@
 import { Link } from 'react-router'
-import { MapPin, Phone, Instagram, Facebook, Youtube, Send, Truck, ExternalLink } from 'lucide-react'
-import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
+import {
+  MapPin,
+  Phone,
+  Instagram,
+  Facebook,
+  Youtube,
+  Send,
+  Truck,
+  ExternalLink,
+  Video,
+  Twitter,
+  MessageSquare,
+  Linkedin,
+  Globe,
+} from 'lucide-react'
+import { STORE_ADDRESS, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
+import { useSocialSettings } from '@/hooks/useSocialSettings'
+
+function getSocialIcon(platform: string) {
+  switch (platform) {
+    case 'instagram':
+      return <Instagram className="h-4 w-4" />
+    case 'whatsapp':
+      return <Send className="h-4 w-4" />
+    case 'facebook':
+      return <Facebook className="h-4 w-4" />
+    case 'youtube':
+      return <Youtube className="h-4 w-4" />
+    case 'tiktok':
+      return <Video className="h-4 w-4" />
+    case 'twitter':
+      return <Twitter className="h-4 w-4" />
+    case 'discord':
+      return <MessageSquare className="h-4 w-4" />
+    case 'linkedin':
+      return <Linkedin className="h-4 w-4" />
+    default:
+      return <Globe className="h-4 w-4" />
+  }
+}
 
 export default function BetaSEOFooter() {
+  const { tagline, socialSettings } = useSocialSettings()
+  const activeSocials = socialSettings.filter((item) => item.enabled)
+
   return (
     <footer className="mt-16 border-t border-border bg-card/60">
 
@@ -56,46 +97,25 @@ export default function BetaSEOFooter() {
               <span>ELECTRO<span className="text-volt">GEGA</span></span>
             </Link>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Gaming setups, authentic PC components & electronics delivered anywhere in Morocco.
+              {tagline || 'Gaming setups, authentic PC components & electronics delivered anywhere in Morocco.'}
             </p>
-            <div className="flex items-center gap-2 text-xs">
-              <a
-                href={STORE_INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:border-volt hover:text-volt transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a
-                href={`https://wa.me/${FALLBACK_WHATSAPP}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:border-volt hover:text-volt transition-colors"
-                aria-label="WhatsApp"
-              >
-                <Send className="h-4 w-4" />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:border-volt hover:text-volt transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="h-4 w-4" />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:border-volt hover:text-volt transition-colors"
-                aria-label="YouTube"
-              >
-                <Youtube className="h-4 w-4" />
-              </a>
-            </div>
+            {activeSocials.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {activeSocials.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary/60 text-muted-foreground hover:border-volt hover:text-volt transition-colors"
+                    aria-label={item.name}
+                    title={item.name}
+                  >
+                    {getSocialIcon(item.platform)}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Column 2: Quick Links */}
