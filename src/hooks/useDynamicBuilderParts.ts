@@ -19,9 +19,11 @@ const VALID_SLOTS: SlotId[] = ['cpu', 'cooler', 'motherboard', 'ram', 'gpu', 'st
 function detectSlotForProduct(p: Product, categoryMap: Map<string, string>): SlotId | null {
   const specs = p.specs || {}
   
-  // Check explicit builder_slot from product specs
+  // Check explicit builder_slot or is_builder from product specs
   const explicitSlot = (specs['PC Builder Slot'] || specs.builder_slot || '').toLowerCase()
-  if (explicitSlot === 'none' || explicitSlot === 'disabled') {
+  const isBuilderStr = String(specs.is_builder ?? specs.is_builder_component ?? specs['PC Builder Component'] ?? '')
+
+  if (isBuilderStr === 'false' || explicitSlot === 'none' || explicitSlot === 'disabled') {
     return null
   }
   if (VALID_SLOTS.includes(explicitSlot as SlotId)) {

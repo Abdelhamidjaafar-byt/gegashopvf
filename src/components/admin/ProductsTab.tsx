@@ -117,6 +117,7 @@ interface FormState {
   specsValues: Record<string, string>
   customSpecs: CustomSpecItem[]
   is_featured: boolean
+  is_builder: boolean
   builder_slot: string
   socket: string
   watts: string
@@ -125,7 +126,7 @@ interface FormState {
 const emptyForm: FormState = {
   name: '', description: '', price: '', stock: '', category_id: '', brand_id: '',
   images: [], specsValues: {}, customSpecs: [], is_featured: false,
-  builder_slot: 'none', socket: '', watts: '',
+  is_builder: true, builder_slot: 'none', socket: '', watts: '',
 }
 
 type SortField = 'name' | 'category' | 'brand' | 'price' | 'stock' | 'created'
@@ -307,6 +308,12 @@ export default function ProductsTab() {
     }
 
     const builderSlot = p.specs?.['PC Builder Slot'] || p.specs?.builder_slot || 'none'
+    const isBuilderStr = String(p.specs?.is_builder ?? p.specs?.is_builder_component ?? p.specs?.['PC Builder Component'] ?? '')
+    const isBuilder =
+      isBuilderStr === 'false' || builderSlot === 'none' || builderSlot === 'disabled'
+        ? false
+        : true
+
     const socketVal = p.specs?.['Socket'] || p.specs?.socket || ''
     const wattsVal = p.specs?.['Watts'] || p.specs?.watts || p.specs?.TDP || ''
 
@@ -322,6 +329,7 @@ export default function ProductsTab() {
       specsValues,
       customSpecs,
       is_featured: p.is_featured,
+      is_builder: isBuilder,
       builder_slot: builderSlot,
       socket: socketVal,
       watts: wattsVal,
@@ -382,9 +390,20 @@ export default function ProductsTab() {
       }
     }
 
-    if (form.builder_slot && form.builder_slot !== 'none') {
-      specs['PC Builder Slot'] = form.builder_slot
+    if (form.is_builder) {
+      specs['is_builder'] = 'true'
+      if (form.builder_slot && form.builder_slot !== 'none') {
+        specs['PC Builder Slot'] = form.builder_slot
+      } else {
+        delete specs['PC Builder Slot']
+        delete specs['builder_slot']
+      }
+    } else {
+      specs['is_builder'] = 'false'
+      specs['PC Builder Slot'] = 'none'
+      specs['builder_slot'] = 'none'
     }
+
     if (form.socket && form.socket.trim()) {
       specs['Socket'] = form.socket.trim()
     }
@@ -982,55 +1001,26 @@ export default function ProductsTab() {
               </div>
             </div>
 
-            {/* PC Builder Component Role & Compatibility Options */}
-            <div className="sm:col-span-2 rounded-md border border-volt/40 bg-volt/5 p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-volt" />
-                <Label className="font-display font-bold text-sm text-foreground">PC Builder Specs & Slot Option</Label>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Set whether this product is available as a component in the Custom PC Builder and specify compatibility details.
-              </p>
-              
-              <div className="grid gap-3 sm:grid-cols-3 pt-1">
-                <div>
-                  <Label className="text-xs font-semibold">PC Builder Slot</Label>
-                  <Select value={form.builder_slot} onValueChange={(v) => setForm({ ...form, builder_slot: v })}>
-                    <SelectTrigger className="mt-1 bg-background text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none" className="text-xs">None (Regular Item)</SelectItem>
-                      <SelectItem value="cpu" className="text-xs">CPU (Processeur)</SelectItem>
-                      <SelectItem value="cooler" className="text-xs">Cooler (Refroidissement)</SelectItem>
-                      <SelectItem value="motherboard" className="text-xs">Motherboard (Carte Mère)</SelectItem>
-                      <SelectItem value="ram" className="text-xs">RAM (Mémoire Vive)</SelectItem>
-                      <SelectItem value="gpu" className="text-xs">GPU (Carte Graphique)</SelectItem>
-                      <SelectItem value="storage" className="text-xs">Storage (SSD / HDD)</SelectItem>
-                      <SelectItem value="psu" className="text-xs">PSU (Alimentation)</SelectItem>
-                      <SelectItem value="case" className="text-xs">Case (Boîtier PC)</SelectItem>
-                    </SelectContent>
-                  </Select>
+            {/* PC Builder Component Option */}
+            <div className="sm:col-span-2 rounded-xl border border-volt/30 bg-volt/5 p-4 transition-all hover:border-volt/50">
+              <label htmlFor="is_builder_checkbox" className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  id="is_builder_checkbox"
+                  type="checkbox"
+                  checked={form.is_builder}
+                  onChange={(e) => setForm({ ...form, is_builder: e.target.checked })}
+                  className="mt-0.5 h-5 w-5 rounded border-border text-volt focus:ring-volt cursor-pointer accent-[#d1a65b]"
+                />
+                <div className="space-y-1">
+                  <span className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                    <SlidersHorizontal className="h-4 w-4 text-volt" />
+                    Component for PC Builder
+                  </span>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Check this box if this product is a PC component (CPU, GPU, RAM, Motherboard, Storage, PSU, Case, Cooler) that customers can select when building a custom PC.
+                  </p>
                 </div>
-
-                <div>
-                  <Label className="text-xs font-semibold">Socket / Platform</Label>
-                  <Input
-                    value={form.socket}
-                    onChange={(e) => setForm({ ...form, socket: e.target.value })}
-                    placeholder="e.g. AM5, LGA1700"
-                    className="mt-1 bg-background text-xs"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-xs font-semibold">Watts / Capacity</Label>
-                  <Input
-                    value={form.watts}
-                    onChange={(e) => setForm({ ...form, watts: e.target.value })}
-                    placeholder="e.g. 120W (TDP) or 850W (PSU)"
-                    className="mt-1 bg-background text-xs"
-                  />
-                </div>
-              </div>
+              </label>
             </div>
 
             <div className="sm:col-span-2">
