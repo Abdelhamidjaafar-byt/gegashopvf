@@ -26,7 +26,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import { fileToResizedDataUrl } from '@/lib/image'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import type { Category, Product } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1084,7 +1084,7 @@ export default function ProductsTab() {
                     {t('admin.edit')}
                   </Button>
                   <Button variant="secondary" size="sm" asChild className="h-8 text-xs font-semibold">
-                    <Link to={`/product/${previewProduct.id}`} target="_blank">
+                    <Link to={getProductUrl(previewProduct)} target="_blank">
                       <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                       {t('admin.viewInStore')}
                     </Link>

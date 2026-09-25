@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import { Flame, Headphones, BookOpen, Clock } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
 
 const TECH_ARTICLES = [
@@ -87,7 +87,7 @@ export default function BetaSidebar() {
           {(accessories.length > 0 ? accessories : products.slice(0, 3)).map((item) => (
             <Link
               key={item.id}
-              to={`/product/${item.id}`}
+              to={getProductUrl(item)}
               className="flex items-center gap-3 py-3 group hover:bg-secondary/40 px-1 rounded-lg transition-colors"
             >
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-secondary/50 p-1 flex items-center justify-center border border-border/40">

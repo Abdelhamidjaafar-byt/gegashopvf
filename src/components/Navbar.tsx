@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
@@ -14,13 +14,17 @@ import {
   HelpCircle,
   Truck,
   Headset,
-  Sliders
+  Sliders,
+  ArrowRight,
+  Tag,
+  X,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useProducts, useCategories } from '@/hooks/useCatalog'
 import { setLanguage } from '@/i18n'
 import { STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -37,17 +41,73 @@ export default function Navbar() {
   const { t, i18n } = useTranslation()
   const { user, hasAdminAccess, signOut } = useAuth()
   const { count, items } = useCart()
+  const { products } = useProducts()
+  const { categories } = useCategories()
   const navigate = useNavigate()
+
   const [q, setQ] = useState('')
+  const [showResults, setShowResults] = useState(false)
   const [open, setOpen] = useState(false)
+  const desktopSearchRef = useRef<HTMLDivElement>(null)
+  const mobileSearchRef = useRef<HTMLDivElement>(null)
 
   const cartSubtotal = items.reduce((acc, item) => acc + Number(item.product.price) * item.qty, 0)
 
+  // Filter top matching products in real-time
+  const searchResults = useMemo(() => {
+    const query = q.trim().toLowerCase()
+    if (!query) return []
+
+    return products
+      .filter((p) => {
+        const nameMatch = p.name.toLowerCase().includes(query)
+        const descMatch = (p.description || '').toLowerCase().includes(query)
+        const specsMatch = Object.values(p.specs || {}).some((v) =>
+          String(v).toLowerCase().includes(query)
+        )
+        return nameMatch || descMatch || specsMatch
+      })
+      .slice(0, 5)
+  }, [products, q])
+
+  // Filter matching categories
+  const matchingCategories = useMemo(() => {
+    const query = q.trim().toLowerCase()
+    if (!query || query.length < 2) return []
+
+    return categories
+      .filter((c) => c.name.toLowerCase().includes(query) || (c.slug || '').toLowerCase().includes(query))
+      .slice(0, 3)
+  }, [categories, q])
+
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    navigate(q.trim() ? `/shop?q=${encodeURIComponent(q.trim())}` : '/shop')
-    setOpen(false)
+    if (q.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(q.trim())}`)
+      setShowResults(false)
+      setOpen(false)
+    } else {
+      navigate('/shop')
+      setShowResults(false)
+      setOpen(false)
+    }
   }
+
+  // Dismiss live search dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        desktopSearchRef.current &&
+        !desktopSearchRef.current.contains(e.target as Node) &&
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(e.target as Node)
+      ) {
+        setShowResults(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
@@ -90,7 +150,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 2. MAIN HEADER ROW (LOGO, SEARCH, PHONE SUPPORT, CART) */}
+      {/* 2. MAIN HEADER ROW (LOGO, DYNAMIC SEARCH, SUPPORT, CART) */}
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
 
         {/* BRAND LOGO */}
@@ -106,23 +166,148 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* SEARCH BAR CENTER */}
-        <form onSubmit={submitSearch} className="hidden flex-1 max-w-xl mx-4 lg:flex items-center">
-          <div className="relative w-full flex items-center">
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search for products, GPUs, laptops, CPUs..."
-              className="h-10 pl-4 pr-24 bg-secondary border-border focus-visible:ring-volt rounded-l-lg rounded-r-none text-xs"
-            />
-            <Button
-              type="submit"
-              className="h-10 rounded-l-none rounded-r-lg bg-volt text-volt-fg hover:bg-volt-dim px-5 text-xs font-bold uppercase tracking-wider shrink-0"
-            >
-              <Search className="h-4 w-4 mr-1" /> Search
-            </Button>
-          </div>
-        </form>
+        {/* DYNAMIC LIVE SEARCH BAR CENTER (DESKTOP) */}
+        <div ref={desktopSearchRef} className="hidden flex-1 max-w-xl mx-4 lg:block relative">
+          <form onSubmit={submitSearch} className="flex items-center">
+            <div className="relative w-full flex items-center">
+              <Input
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value)
+                  setShowResults(true)
+                }}
+                onFocus={() => setShowResults(true)}
+                placeholder="Search for products, GPUs, laptops, CPUs..."
+                className="h-10 pl-4 pr-24 bg-secondary border-border focus-visible:ring-volt rounded-l-lg rounded-r-none text-xs"
+              />
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ('')
+                    setShowResults(false)
+                  }}
+                  className="absolute right-24 p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <Button
+                type="submit"
+                className="h-10 rounded-l-none rounded-r-lg bg-volt text-volt-fg hover:bg-volt-dim px-5 text-xs font-bold uppercase tracking-wider shrink-0"
+              >
+                <Search className="h-4 w-4 mr-1" /> Search
+              </Button>
+            </div>
+          </form>
+
+          {/* DYNAMIC LIVE SEARCH DROPDOWN (20% TRANSPARENT = 80% OPAQUE) */}
+          {showResults && q.trim().length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-border/80 bg-card/80 p-2 shadow-2xl backdrop-blur-md animate-in fade-in-50 zoom-in-95">
+              
+              {/* Category Suggestions */}
+              {matchingCategories.length > 0 && (
+                <div className="mb-2 pb-2 border-b border-border/60">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase px-3 py-1 tracking-wider">
+                    Categories
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 px-2 pt-0.5">
+                    {matchingCategories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        to={`/shop?category=${cat.slug || cat.id}`}
+                        onClick={() => setShowResults(false)}
+                        className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-2.5 py-1 text-xs font-semibold hover:bg-volt hover:text-volt-fg transition-colors"
+                      >
+                        <Tag className="h-3 w-3 text-volt" /> {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Product Live Suggestions */}
+              {searchResults.length > 0 ? (
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase px-3 py-1 tracking-wider flex justify-between items-center">
+                    <span>Products ({searchResults.length})</span>
+                    <span className="text-volt font-semibold text-[9px]">Live Results</span>
+                  </div>
+
+                  {searchResults.map((product) => (
+                    <Link
+                      key={product.id}
+                      to={getProductUrl(product)}
+                      onClick={() => setShowResults(false)}
+                      className="flex items-center gap-3 rounded-lg p-2 hover:bg-secondary/80 transition-colors group"
+                    >
+                      <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md border border-border bg-secondary/50 p-1 flex items-center justify-center">
+                        {product.images?.[0] ? (
+                          <img
+                            src={product.images[0]}
+                            alt={product.name}
+                            className="h-full w-full object-contain group-hover:scale-110 transition-transform"
+                          />
+                        ) : (
+                          <div className="text-xs font-bold text-muted-foreground">
+                            {product.name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-foreground group-hover:text-volt transition-colors truncate">
+                          {product.name}
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {product.description || 'Authentic PC product'}
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-extrabold text-volt block">
+                          {formatPrice(Number(product.price), i18n.language)}
+                        </span>
+                        {product.stock > 0 ? (
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase">In Stock</span>
+                        ) : (
+                          <span className="text-[9px] font-bold text-destructive uppercase">Out of Stock</span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+
+                  {/* View All Results Footer Link */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      submitSearch(e)
+                      setShowResults(false)
+                    }}
+                    className="w-full mt-2 rounded-lg bg-secondary py-2 text-center text-xs font-bold text-volt hover:bg-volt hover:text-volt-fg transition-all flex items-center justify-center gap-1"
+                  >
+                    View All Results for "{q.trim()}" <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground">No products found matching "{q.trim()}"</p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      submitSearch(e)
+                      setShowResults(false)
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-volt hover:underline"
+                  >
+                    Search in shop catalog <ArrowRight className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* RIGHT SIDE ACTIONS: SUPPORT 24/7 & CART */}
         <div className="flex items-center gap-3">
@@ -214,15 +399,40 @@ export default function Navbar() {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
-              <form onSubmit={submitSearch} className="mt-6">
-                <Input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search products..."
-                  className="bg-secondary text-xs"
-                />
-              </form>
+            <SheetContent side="right" className="w-80 overflow-y-auto">
+              <div ref={mobileSearchRef} className="mt-6 relative">
+                <form onSubmit={submitSearch}>
+                  <Input
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value)
+                      setShowResults(true)
+                    }}
+                    onFocus={() => setShowResults(true)}
+                    placeholder="Search products..."
+                    className="bg-secondary text-xs"
+                  />
+                </form>
+
+                {showResults && q.trim().length > 0 && searchResults.length > 0 && (
+                  <div className="mt-2 rounded-lg border border-border/80 bg-card/80 p-2 shadow-lg backdrop-blur-md space-y-1">
+                    {searchResults.slice(0, 4).map((product) => (
+                      <Link
+                        key={product.id}
+                        to={getProductUrl(product)}
+                        onClick={() => {
+                          setShowResults(false)
+                          setOpen(false)
+                        }}
+                        className="flex items-center gap-2.5 p-1.5 rounded hover:bg-secondary text-xs truncate group"
+                      >
+                        <span className="font-semibold truncate flex-1 group-hover:text-volt">{product.name}</span>
+                        <span className="font-extrabold text-volt shrink-0">{formatPrice(Number(product.price), i18n.language)}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
               <nav className="mt-6 flex flex-col gap-4">
                 <Link to="/shop" onClick={() => setOpen(false)} className="text-base font-bold">
                   ElectroGega Shop

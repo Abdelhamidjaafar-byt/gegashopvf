@@ -15,3 +15,24 @@ export function formatDate(iso: string, locale: string = 'en'): string {
     year: 'numeric',
   })
 }
+
+export function slugify(text: string): string {
+  if (!text) return ''
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 -]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+export function getProductUrl(product?: { id: string; name?: string } | null): string {
+  if (!product) return '/shop'
+  if (!product.name) return `/product/${product.id}`
+  const slug = slugify(product.name)
+  return slug ? `/product/${slug}` : `/product/${product.id}`
+}

@@ -14,10 +14,10 @@ import {
   Sliders,
   Sparkles
 } from 'lucide-react'
-import { useProducts } from '@/hooks/useCatalog'
+import { useProducts, useCategories } from '@/hooks/useCatalog'
 import { useOffers } from '@/hooks/useOffers'
 import { useHeroSlides } from '@/hooks/useHeroSlides'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
 
 function useCountdown(targetIso?: string) {
@@ -98,9 +98,73 @@ const QUICK_CATEGORIES = [
 export default function BetaHero() {
   const { i18n } = useTranslation()
   const { products } = useProducts()
+  const { categories } = useCategories()
   const { offers } = useOffers()
   const { activeSlides: adminSlides } = useHeroSlides()
   const [activeSlideIdx, setActiveSlideIdx] = useState(0)
+
+  // Find in-stock PC Gamer product closest to average price
+  const bestPickProduct = useMemo(() => {
+    if (!products || products.length === 0) return null
+
+    // 1. Collect PC Gamer Category IDs
+    const pcGamerCatIds = new Set<string>()
+    categories.forEach((cat) => {
+      const slug = (cat.slug || '').toLowerCase()
+      const name = (cat.name || '').toLowerCase()
+      if (
+        slug === 'pc-gamer' ||
+        slug.includes('pc-gamer') ||
+        slug.includes('pc_gamer') ||
+        name.includes('pc gamer') ||
+        name.includes('ordinateur gamer') ||
+        name.includes('pc complet')
+      ) {
+        pcGamerCatIds.add(cat.id)
+      }
+    })
+
+    // 2. Filter in-stock PC Gamer items first
+    let candidates = products.filter((p) => {
+      if (p.stock <= 0) return false
+      const inCategory = p.category_id ? pcGamerCatIds.has(p.category_id) : false
+      const nameMatch = p.name.toLowerCase().includes('pc gamer') || p.name.toLowerCase().includes('pc ')
+      return inCategory || nameMatch
+    })
+
+    // Fallback if no in-stock PC Gamer products: match any PC gamer products regardless of stock
+    if (candidates.length === 0) {
+      candidates = products.filter((p) => {
+        const inCategory = p.category_id ? pcGamerCatIds.has(p.category_id) : false
+        const nameMatch = p.name.toLowerCase().includes('pc gamer') || p.name.toLowerCase().includes('pc ')
+        return inCategory || nameMatch
+      })
+    }
+
+    // Fallback if still empty: use all in-stock products
+    if (candidates.length === 0) {
+      candidates = products.filter((p) => p.stock > 0)
+    }
+
+    if (candidates.length === 0) return null
+
+    // 3. Compute average price of candidate PC Gamer products
+    const avgPrice = candidates.reduce((acc, item) => acc + Number(item.price || 0), 0) / candidates.length
+
+    // 4. Select candidate with price closest to avgPrice
+    let best = candidates[0]
+    let smallestDiff = Math.abs(Number(best.price || 0) - avgPrice)
+
+    for (let i = 1; i < candidates.length; i++) {
+      const diff = Math.abs(Number(candidates[i].price || 0) - avgPrice)
+      if (diff < smallestDiff) {
+        smallestDiff = diff
+        best = candidates[i]
+      }
+    }
+
+    return best
+  }, [products, categories])
 
   // Dynamic slides combining admin-uploaded slides and latest 3 DB products
   const heroSlides = useMemo(() => {
@@ -144,7 +208,7 @@ export default function BetaHero() {
         price: formatPrice(p.price, i18n.language),
         oldPrice: formatPrice(p.price * 1.15, i18n.language),
         image: p.images?.[0] || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&q=80',
-        link: `/product/${p.id}`,
+        link: getProductUrl(p),
         badge: p.is_featured ? 'FEATURED' : idx === 0 ? 'NEW ARRIVAL' : 'TOP PICK',
       })
     })
@@ -284,7 +348,7 @@ export default function BetaHero() {
           </div>
 
           <Link
-            to={flashProduct ? `/product/${flashProduct.id}` : '/deals'}
+            to={flashProduct ? getProductUrl(flashProduct) : '/deals'}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-volt py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:shadow-md"
           >
             Get Deal Now <ArrowRight className="h-3.5 w-3.5" />
@@ -414,31 +478,67 @@ export default function BetaHero() {
           </div>
 
           {/* BEST PICK OF THE WEEK CARD */}
-          <div className="flex-1 rounded-xl border border-border bg-gradient-to-br from-card via-card to-secondary/30 p-4 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-2 right-2 rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-black uppercase text-volt border border-volt/30">
-              BEST PICK
-            </div>
+          <div className="flex-1 rounded-xl border border-volt/30 bg-card/90 p-4 sm:p-5 shadow-lg relative group flex flex-col justify-between overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-volt/10 rounded-full blur-2xl pointer-events-none" />
 
             <div>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                PC GAMER SPECIAL
-              </span>
-              <h4 className="font-bold text-sm mt-1 group-hover:text-volt transition-colors line-clamp-1">
-                PC GAMER INTEL i5 12400F + RTX 4060
-              </h4>
-              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                16GB DDR4 3200MHz | 1TB NVMe M.2 SSD | 650W Bronze PSU | Tempered Glass Case
-              </p>
+              {/* Header Badge */}
+              <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-volt/15 border border-volt/40 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-volt">
+                  <Sparkles className="h-3.5 w-3.5 text-volt" /> Best Pick
+                </span>
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                  PC Gamer Special
+                </span>
+              </div>
+
+              {/* Product Image & Discount Tag */}
+              <div className="relative mt-3 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-secondary/40 p-3 border border-border/50">
+                <span className="absolute top-2 left-2 z-10 rounded-md bg-volt px-2 py-0.5 text-xs font-black text-volt-fg shadow-md">
+                  BEST DEAL
+                </span>
+
+                {bestPickProduct?.images?.[0] ? (
+                  <img
+                    src={bestPickProduct.images[0]}
+                    alt={bestPickProduct.name}
+                    className="max-h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=500&q=80"
+                    alt="Best Pick PC Gamer"
+                    className="max-h-32 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
+                )}
+              </div>
+
+              {/* Title & Desc */}
+              <div className="mt-3">
+                <h3 className="font-bold text-sm line-clamp-2 group-hover:text-volt transition-colors">
+                  {bestPickProduct ? bestPickProduct.name : 'PC GAMER INTEL i5 12400F + RTX 4060'}
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  {bestPickProduct
+                    ? (bestPickProduct.description || 'Custom PC gamer build with authentic components & official warranty.')
+                    : '16GB DDR4 3200MHz | 1TB NVMe M.2 SSD | 650W Bronze PSU | Tempered Glass Case'}
+                </p>
+              </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between">
+            {/* Price tag & CTA button */}
+            <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
               <div>
-                <span className="text-[10px] text-muted-foreground line-through block">9,990.00 MAD</span>
-                <span className="font-display text-lg font-extrabold text-volt">8,490.00 MAD</span>
+                <span className="text-[10px] text-muted-foreground line-through block">
+                  {bestPickProduct ? formatPrice(bestPickProduct.price * 1.12, i18n.language) : '9,990.00 MAD'}
+                </span>
+                <span className="font-display text-lg font-extrabold text-volt">
+                  {bestPickProduct ? formatPrice(bestPickProduct.price, i18n.language) : '8,490.00 MAD'}
+                </span>
               </div>
               <Link
-                to="/shop?category=pc-gamer"
-                className="rounded-md bg-volt/10 border border-volt/40 px-3 py-1.5 text-xs font-bold text-volt hover:bg-volt hover:text-volt-fg transition-all"
+                to={bestPickProduct ? getProductUrl(bestPickProduct) : '/shop?category=pc-gamer'}
+                className="rounded-lg bg-volt px-3.5 py-2 text-xs font-bold text-volt-fg hover:bg-volt-dim shadow-sm transition-all"
               >
                 Configure
               </Link>

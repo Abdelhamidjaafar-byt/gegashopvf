@@ -5,7 +5,7 @@ import { Minus, Plus, ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Product } from '@/types'
 import { useCart } from '@/contexts/CartContext'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { StockBadge } from './ProductCard'
@@ -60,7 +60,7 @@ export default function QuickView({ product, onClose }: { product: Product; onCl
                 <ShoppingCart className="mr-2 h-4 w-4" /> {t('product.addToCart')}
               </Button>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate(`/product/${product.id}`)}>
+            <Button variant="ghost" size="sm" onClick={() => navigate(getProductUrl(product))}>
               {t('home.viewAll')} →
             </Button>
           </div>

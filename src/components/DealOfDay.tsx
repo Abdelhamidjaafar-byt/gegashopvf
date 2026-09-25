@@ -5,7 +5,7 @@ import { motion } from 'motion/react'
 import { ArrowRight, Zap } from 'lucide-react'
 import { useProducts } from '@/hooks/useCatalog'
 import { useOffers } from '@/hooks/useOffers'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, getProductUrl } from '@/lib/format'
 import type { Product, Offer } from '@/types'
 
 const DEFAULT_DEAL_IDS = ['d1000000-0000-4000-8000-000000000005', 'p5']
@@ -139,7 +139,7 @@ export default function DealOfDay() {
               </div>
 
               <Link
-                to={`/product/${product.id}`}
+                to={getProductUrl(product)}
                 className="mt-7 inline-flex w-fit items-center gap-2 bg-volt px-6 py-3 text-sm font-bold uppercase tracking-wide text-volt-fg transition-colors hover:bg-volt-dim"
               >
                 {t('deal.cta')} <ArrowRight className="h-4 w-4" />
@@ -147,7 +147,7 @@ export default function DealOfDay() {
             </div>
 
             {/* Product image */}
-            <Link to={`/product/${product.id}`} className="group relative flex items-center justify-center">
+            <Link to={getProductUrl(product)} className="group relative flex items-center justify-center">
               <div className="absolute h-48 w-48 rounded-full bg-volt/15 blur-[70px] transition-opacity group-hover:opacity-100 md:h-64 md:w-64" />
               <motion.img
                 src={product.images && product.images[0] ? product.images[0] : ''}
