@@ -27,6 +27,7 @@ import { supabase } from '@/lib/supabase'
 import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import { fileToResizedDataUrl } from '@/lib/image'
 import { formatPrice, getProductUrl } from '@/lib/format'
+import { filterPublicSpecs, isInternalSpecKey } from '@/lib/specs'
 import type { Category, Product } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -291,18 +292,20 @@ export default function ProductsTab() {
   const openEdit = (p: Product) => {
     const existingSpecs = p.specs || {}
     const categoryStatic = getStaticSpecsForCategory(p.category_id || '', categories)
-    const categorySet = new Set(categoryStatic)
+    const categoryMap = new Map(categoryStatic.map((k) => [k.toUpperCase(), k]))
 
     const specsValues: Record<string, string> = {}
     const customSpecs: CustomSpecItem[] = []
 
     for (const [k, v] of Object.entries(existingSpecs)) {
-      if (categorySet.has(k)) {
-        specsValues[k] = v
+      if (isInternalSpecKey(k)) continue
+      const matchedCatKey = categoryMap.get(k.toUpperCase())
+      if (matchedCatKey) {
+        specsValues[matchedCatKey] = v
       } else {
         customSpecs.push({
           id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-          key: k,
+          key: k.toUpperCase(),
           value: v,
         })
       }
@@ -387,37 +390,21 @@ export default function ProductsTab() {
   const save = async () => {
     const specs: Record<string, string> = {}
     for (const [k, v] of Object.entries(form.specsValues)) {
-      if (v && v.trim()) {
-        specs[k] = v.trim()
+      if (v && v.trim() && !isInternalSpecKey(k)) {
+        specs[k.trim().toUpperCase()] = v.trim()
       }
     }
     for (const item of form.customSpecs) {
-      if (item.key && item.key.trim() && item.value && item.value.trim()) {
-        specs[item.key.trim()] = item.value.trim()
+      if (item.key && item.key.trim() && item.value && item.value.trim() && !isInternalSpecKey(item.key)) {
+        specs[item.key.trim().toUpperCase()] = item.value.trim()
       }
-    }
-
-    specs['is_new'] = form.is_new ? 'true' : 'false'
-
-    if (form.is_builder) {
-      specs['is_builder'] = 'true'
-      if (form.builder_slot && form.builder_slot !== 'none') {
-        specs['PC Builder Slot'] = form.builder_slot
-      } else {
-        delete specs['PC Builder Slot']
-        delete specs['builder_slot']
-      }
-    } else {
-      specs['is_builder'] = 'false'
-      specs['PC Builder Slot'] = 'none'
-      specs['builder_slot'] = 'none'
     }
 
     if (form.socket && form.socket.trim()) {
-      specs['Socket'] = form.socket.trim()
+      specs['SOCKET'] = form.socket.trim()
     }
     if (form.watts && form.watts.trim()) {
-      specs['Watts'] = form.watts.trim()
+      specs['WATTS'] = form.watts.trim()
     }
 
     const payload = {
@@ -1172,15 +1159,15 @@ export default function ProductsTab() {
                 )}
 
                 {/* Specs */}
-                {Object.keys(previewProduct.specs || {}).length > 0 && (
+                {filterPublicSpecs(previewProduct.specs).length > 0 && (
                   <div className="mt-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
                       {t('admin.specs')}
                     </h4>
                     <div className="max-h-48 overflow-y-auto rounded-md border border-border divide-y divide-border text-xs bg-secondary/20">
-                      {Object.entries(previewProduct.specs).map(([k, v]) => (
+                      {filterPublicSpecs(previewProduct.specs).map(([k, v]) => (
                         <div key={k} className="grid grid-cols-3 gap-2 px-3 py-1.5">
-                          <span className="font-semibold text-foreground/80">{k}</span>
+                          <span className="font-semibold text-foreground/80 uppercase">{k}</span>
                           <span className="col-span-2 text-muted-foreground tabular-nums">{v}</span>
                         </div>
                       ))}

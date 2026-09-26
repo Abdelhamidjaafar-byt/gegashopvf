@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator'
 import ProductCard, { StockBadge } from '@/components/ProductCard'
 import RatingStars from '@/components/RatingStars'
 import RecentlyViewed from '@/components/RecentlyViewed'
+import { filterPublicSpecs } from '@/lib/specs'
 
 export default function ProductPage() {
   const { id } = useParams()
@@ -189,13 +190,13 @@ export default function ProductPage() {
           </div>
 
           {/* Specs */}
-          {Object.keys(product.specs || {}).length > 0 && (
+          {filterPublicSpecs(product.specs).length > 0 && (
             <div className="mt-8">
               <h2 className="font-display text-lg font-bold">{t('product.specs')}</h2>
               <dl className="mt-3 divide-y divide-border rounded-md border border-border">
-                {Object.entries(product.specs).map(([k, v]) => (
+                {filterPublicSpecs(product.specs).map(([k, v]) => (
                   <div key={k} className="grid grid-cols-3 gap-4 px-4 py-2.5 text-sm">
-                    <dt className="font-medium text-muted-foreground">{k}</dt>
+                    <dt className="font-medium text-muted-foreground uppercase">{k}</dt>
                     <dd className="col-span-2">{v}</dd>
                   </div>
                 ))}

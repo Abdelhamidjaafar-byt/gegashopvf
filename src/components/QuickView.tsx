@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { StockBadge } from './ProductCard'
 import RatingStars from './RatingStars'
+import { filterPublicSpecs } from '@/lib/specs'
 
 export default function QuickView({ product, onClose }: { product: Product; onClose: () => void }) {
   const { t, i18n } = useTranslation()
@@ -38,9 +39,7 @@ export default function QuickView({ product, onClose }: { product: Product; onCl
     new Date().getTime() - new Date(product.created_at).getTime() < 14 * 24 * 60 * 60 * 1000
 
   const cleanSpecs = useMemo(() => {
-    return Object.entries(product.specs || {}).filter(
-      ([k, v]) => !['is_new', 'NEW Arrival'].includes(k) && typeof v === 'string' && v.trim() !== ''
-    )
+    return filterPublicSpecs(product.specs)
   }, [product.specs])
 
   const handleViewWholeThing = () => {
@@ -131,7 +130,7 @@ export default function QuickView({ product, onClose }: { product: Product; onCl
                 <dl className="max-h-48 overflow-y-auto divide-y divide-border/60 rounded-md border border-border/70 text-xs bg-card">
                   {cleanSpecs.map(([k, v]) => (
                     <div key={k} className="grid grid-cols-3 gap-2 px-3 py-2 bg-secondary/15 even:bg-transparent">
-                      <dt className="font-medium text-muted-foreground truncate">{k}</dt>
+                      <dt className="font-medium text-muted-foreground truncate uppercase">{k}</dt>
                       <dd className="col-span-2 font-medium truncate">{v}</dd>
                     </div>
                   ))}

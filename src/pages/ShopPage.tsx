@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { isInternalSpecKey } from '@/lib/specs'
 import type { Category } from '@/types'
 import {
   Select,
@@ -147,10 +148,12 @@ export default function ShopPage() {
     for (const p of categoryProducts) {
       if (!p.specs) continue
       for (const [key, val] of Object.entries(p.specs)) {
-        if (!val || typeof val !== 'string' || !val.trim()) continue
-        const existing = map.get(key) || new Set<string>()
+        if (!val || typeof val !== 'string' || !val.trim() || isInternalSpecKey(key)) continue
+        if (val.trim().toLowerCase() === 'none') continue
+        const upperKey = key.trim().toUpperCase()
+        const existing = map.get(upperKey) || new Set<string>()
         existing.add(val.trim())
-        map.set(key, existing)
+        map.set(upperKey, existing)
       }
     }
 
@@ -348,7 +351,11 @@ export default function ShopPage() {
     for (const [specKey, selectedVals] of Object.entries(selectedSpecs)) {
       if (selectedVals.length > 0) {
         list = list.filter((p) => {
-          const productVal = p.specs?.[specKey]
+          if (!p.specs) return false
+          const matchedEntry = Object.entries(p.specs).find(
+            ([k]) => k.trim().toUpperCase() === specKey.trim().toUpperCase()
+          )
+          const productVal = matchedEntry ? matchedEntry[1] : undefined
           if (!productVal) return false
           return selectedVals.some((v) => productVal.toLowerCase().includes(v.toLowerCase()))
         })
@@ -530,7 +537,7 @@ export default function ShopPage() {
             <div className="space-y-4 pt-1">
               {availableSpecs.map((spec) => (
                 <div key={spec.key} className="space-y-1.5">
-                  <div className="text-xs font-semibold text-foreground/80">{spec.key}</div>
+                  <div className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">{spec.key}</div>
                   <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
                     {spec.values.map((val) => {
                       const isChecked = selectedSpecs[spec.key]?.includes(val) || false
