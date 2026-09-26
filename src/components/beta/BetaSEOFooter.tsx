@@ -17,6 +17,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { STORE_ADDRESS, STORE_MAPS_URL, STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
 import { useSocialSettings } from '@/hooks/useSocialSettings'
+import { useBuilderSettings } from '@/hooks/useBuilderSettings'
 
 function getSocialIcon(platform: string) {
   switch (platform) {
@@ -44,6 +45,7 @@ function getSocialIcon(platform: string) {
 export default function BetaSEOFooter() {
   const { t, i18n } = useTranslation()
   const { tagline, socialSettings } = useSocialSettings()
+  const { enabled: isBuilderEnabled } = useBuilderSettings()
   const activeSocials = socialSettings.filter((item) => item.enabled)
   const isEn = i18n.language?.startsWith('en')
 
@@ -162,7 +164,9 @@ export default function BetaSEOFooter() {
               <li><Link to="/shop?category=composants" className="hover:text-volt transition-colors">{isEn ? 'Graphics Cards & CPUs' : 'Cartes Graphiques & Processeurs'}</Link></li>
               <li><Link to="/shop?category=displays-tv" className="hover:text-volt transition-colors">{isEn ? 'Gaming Monitors' : 'Écrans & Moniteurs Gamer'}</Link></li>
               <li><Link to="/shop?q=Apple" className="hover:text-volt transition-colors">{isEn ? 'Apple Lineup' : 'Univers Apple'}</Link></li>
-              <li><Link to="/builder" className="hover:text-volt transition-colors font-bold text-volt">{t('hero.pcBuilder', 'Configurateur PC')}</Link></li>
+              {isBuilderEnabled && (
+                <li><Link to="/builder" className="hover:text-volt transition-colors font-bold text-volt">{t('hero.pcBuilder', 'Configurateur PC')}</Link></li>
+              )}
             </ul>
           </div>
 

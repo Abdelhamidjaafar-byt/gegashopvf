@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { isShopFilterSpecKey } from '@/lib/specs'
+import { isInternalSpecKey } from '@/lib/specs'
 import type { Category } from '@/types'
 import {
   Select,
@@ -148,10 +148,9 @@ export default function ShopPage() {
     for (const p of categoryProducts) {
       if (!p.specs) continue
       for (const [key, val] of Object.entries(p.specs)) {
-        if (!val || typeof val !== 'string' || !val.trim() || !isShopFilterSpecKey(key)) continue
+        if (!val || typeof val !== 'string' || !val.trim() || isInternalSpecKey(key)) continue
         if (val.trim().toLowerCase() === 'none') continue
         const upperKey = key.trim().toUpperCase()
-        if (!isShopFilterSpecKey(upperKey)) continue
         const existing = map.get(upperKey) || new Set<string>()
         existing.add(val.trim())
         map.set(upperKey, existing)

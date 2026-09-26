@@ -458,10 +458,10 @@ export default function ProductsTab() {
 
   return (
     <div className="space-y-4">
-      
+
       {/* 1. TOP CONTROL BAR: SEARCH, FILTERS, ORDER BY, ADD BUTTON */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
-        
+
         {/* Left Side: Search Input */}
         <div className="relative flex-1 min-w-[260px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -483,7 +483,7 @@ export default function ProductsTab() {
 
         {/* Right Side: Filters & Sort Dropdowns */}
         <div className="flex flex-wrap items-center gap-2">
-          
+
           {/* Category Filter */}
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-[150px] bg-secondary text-xs h-9">
@@ -829,9 +829,8 @@ export default function ProductsTab() {
                     variant={pageNum === safePage ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`h-8 min-w-8 text-xs font-bold ${
-                      pageNum === safePage ? 'bg-volt text-volt-fg hover:bg-volt-dim' : ''
-                    }`}
+                    className={`h-8 min-w-8 text-xs font-bold ${pageNum === safePage ? 'bg-volt text-volt-fg hover:bg-volt-dim' : ''
+                      }`}
                   >
                     {pageNum}
                   </Button>
@@ -1118,9 +1117,8 @@ export default function ProductsTab() {
                       <button
                         key={i}
                         onClick={() => setPreviewImageIdx(i)}
-                        className={`h-14 w-14 shrink-0 overflow-hidden rounded border transition-colors ${
-                          i === previewImageIdx ? 'border-volt ring-1 ring-volt' : 'border-border'
-                        }`}
+                        className={`h-14 w-14 shrink-0 overflow-hidden rounded border transition-colors ${i === previewImageIdx ? 'border-volt ring-1 ring-volt' : 'border-border'
+                          }`}
                       >
                         <img src={src} alt="" className="h-full w-full object-cover" />
                       </button>

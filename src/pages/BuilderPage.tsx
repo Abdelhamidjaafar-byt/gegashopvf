@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import {
   AlertTriangle,
+  ArrowRight,
   Check,
   Cpu,
   ShoppingCart,
@@ -15,6 +16,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { useBuilderSettings } from '@/hooks/useBuilderSettings'
 import PcAssembly from '@/components/PcAssembly'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +45,8 @@ export type DynamicBuildSelection = Partial<Record<SlotId, DynamicBuildPart>>
 export default function BuilderPage() {
   const { t, i18n } = useTranslation()
   const { add } = useCart()
+  const { hasAdminAccess } = useAuth()
+  const { enabled: isBuilderEnabled, loading: settingsLoading } = useBuilderSettings()
   const navigate = useNavigate()
 
   const { loading, getPartsForSlot } = useDynamicBuilderParts()
@@ -115,8 +120,50 @@ export default function BuilderPage() {
     navigate('/cart')
   }
 
+  // If builder is disabled and visitor is not an admin/manager, show friendly out-of-stock message
+  if (!settingsLoading && !isBuilderEnabled && !hasAdminAccess) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary/80 text-muted-foreground border border-border">
+          <Cpu className="h-10 w-10 text-volt" />
+        </div>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl text-foreground">
+          Configurateur PC Temporairement Indisponible
+        </h1>
+        <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground leading-relaxed">
+          Notre service de montage sur-mesure est momentanément suspendu en attendant le réapprovisionnement de nos stocks de composants. Retrouvez dès maintenant nos PC Gamer complets assemblés, testés et prêts à l'expédition !
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild className="bg-volt text-volt-fg hover:bg-volt-dim font-bold shadow-md">
+            <Link to="/shop?category=pc-gamer">
+              Découvrir les PC Gamer <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="border-border">
+            <Link to="/shop">Voir toute la boutique</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+
+      {/* ADMIN PREVIEW NOTICE BANNER */}
+      {!isBuilderEnabled && hasAdminAccess && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-volt/40 bg-volt/10 p-3.5 text-xs text-foreground">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="h-4 w-4 text-volt shrink-0" />
+            <span>
+              <strong className="text-volt">Mode Prévisualisation Admin :</strong> Le Configurateur PC est actuellement <span className="font-semibold text-destructive">masqué</span> pour les visiteurs. Vous pouvez l'activer à tout moment depuis l'Admin Hub.
+            </span>
+          </div>
+          <Button asChild size="sm" variant="outline" className="border-volt/40 text-volt hover:bg-volt/10 text-xs font-bold shrink-0">
+            <Link to="/admin">Gérer dans l'Admin Hub</Link>
+          </Button>
+        </div>
+      )}
       
       {/* HEADER BAR */}
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/80 pb-6">

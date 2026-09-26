@@ -17,6 +17,7 @@ import {
 import { useProducts, useCategories } from '@/hooks/useCatalog'
 import { useOffers } from '@/hooks/useOffers'
 import { useHeroSlides } from '@/hooks/useHeroSlides'
+import { useBuilderSettings } from '@/hooks/useBuilderSettings'
 import { formatPrice, getProductUrl } from '@/lib/format'
 import { useTranslation } from 'react-i18next'
 
@@ -101,6 +102,7 @@ export default function BetaHero() {
   const { categories } = useCategories()
   const { offers } = useOffers()
   const { activeSlides: adminSlides } = useHeroSlides()
+  const { enabled: isBuilderEnabled } = useBuilderSettings()
   const [activeSlideIdx, setActiveSlideIdx] = useState(0)
 
   // Find in-stock PC Gamer product closest to average price
@@ -417,17 +419,19 @@ export default function BetaHero() {
             <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-4">
               <div className="flex items-center gap-3">
                 <Link
-                  to={currentSlide.link}
+                  to={!isBuilderEnabled && currentSlide.link === '/builder' ? '/shop?category=pc-gamer' : currentSlide.link}
                   className="inline-flex items-center gap-2 rounded-lg bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105 shadow-md"
                 >
                   {t('hero.discover', 'Découvrir')} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
-                <Link
-                  to="/builder"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 backdrop-blur px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
-                >
-                  <Sliders className="h-3.5 w-3.5 text-volt" /> {t('hero.pcBuilder', 'Configurateur PC')}
-                </Link>
+                {isBuilderEnabled && (
+                  <Link
+                    to="/builder"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 backdrop-blur px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
+                  >
+                    <Sliders className="h-3.5 w-3.5 text-volt" /> {t('hero.pcBuilder', 'Configurateur PC')}
+                  </Link>
+                )}
               </div>
 
               {/* Carousel Indicators */}

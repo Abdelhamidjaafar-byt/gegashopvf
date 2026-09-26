@@ -17,23 +17,9 @@ export function isInternalSpecKey(key: string): boolean {
     INTERNAL_SPEC_KEYS.has(lower) ||
     lower.startsWith('is_new') ||
     lower.startsWith('is_build') ||
-    lower.startsWith('is_builder')
+    lower.startsWith('is_builder') ||
+    lower.startsWith('builder_')
   )
-}
-
-export function isShopFilterSpecKey(key: string): boolean {
-  if (!key) return false
-  if (isInternalSpecKey(key)) return false
-  const upper = key.trim().toUpperCase()
-  if (
-    upper === 'POIDS' ||
-    upper === 'WEIGHT' ||
-    upper.startsWith('POIDS') ||
-    upper.startsWith('WEIGHT')
-  ) {
-    return false
-  }
-  return true
 }
 
 export function filterPublicSpecs(

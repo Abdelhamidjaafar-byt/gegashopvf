@@ -1,10 +1,11 @@
 import { Navigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { Settings, ShieldCheck, Radio, Zap, Video, Tag, AlertCircle } from 'lucide-react'
+import { Settings, ShieldCheck, Radio, Zap, Video, Tag, AlertCircle, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProductsTab from '@/components/admin/ProductsTab'
 import TaxonomyTab from '@/components/admin/TaxonomyTab'
+import BuilderTab from '@/components/admin/BuilderTab'
 import OrdersTab from '@/components/admin/OrdersTab'
 import UsersTab from '@/components/admin/UsersTab'
 import OffersTab from '@/components/admin/OffersTab'
@@ -50,6 +51,10 @@ export default function AdminPage() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="products">{t('admin.products')}</TabsTrigger>
           <TabsTrigger value="taxonomy">{t('admin.taxonomy')}</TabsTrigger>
+          <TabsTrigger value="builder" className="flex items-center gap-1.5 font-semibold">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-volt" />
+            {t('admin.builder', 'Configurateur PC')}
+          </TabsTrigger>
           {isAdmin && (
             <>
               <TabsTrigger value="offers" className="flex items-center gap-1.5 font-semibold text-volt">
@@ -72,6 +77,7 @@ export default function AdminPage() {
 
         <TabsContent value="products" className="mt-6"><ProductsTab /></TabsContent>
         <TabsContent value="taxonomy" className="mt-6"><TaxonomyTab /></TabsContent>
+        <TabsContent value="builder" className="mt-6"><BuilderTab /></TabsContent>
 
         {isAdmin && (
           <>

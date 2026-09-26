@@ -22,6 +22,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
 import { useProducts, useCategories } from '@/hooks/useCatalog'
+import { useBuilderSettings } from '@/hooks/useBuilderSettings'
 import { setLanguage } from '@/i18n'
 import { STORE_PHONE_DISPLAY, FALLBACK_WHATSAPP } from '@/lib/store'
 import { formatPrice, getProductUrl } from '@/lib/format'
@@ -43,6 +44,7 @@ export default function Navbar() {
   const { count, items } = useCart()
   const { products } = useProducts()
   const { categories } = useCategories()
+  const { enabled: isBuilderEnabled } = useBuilderSettings()
   const navigate = useNavigate()
 
   const [q, setQ] = useState('')
@@ -205,7 +207,7 @@ export default function Navbar() {
           {/* DYNAMIC LIVE SEARCH DROPDOWN (20% TRANSPARENT = 80% OPAQUE) */}
           {showResults && q.trim().length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-border/80 bg-card/80 p-2 shadow-2xl backdrop-blur-md animate-in fade-in-50 zoom-in-95">
-              
+
               {/* Category Suggestions */}
               {matchingCategories.length > 0 && (
                 <div className="mb-2 pb-2 border-b border-border/60">
@@ -443,9 +445,11 @@ export default function Navbar() {
                   <Flame className="h-4 w-4 text-volt fill-volt" />
                   Flash Sales & Deals
                 </Link>
-                <Link to="/builder" onClick={() => setOpen(false)} className="text-base font-bold text-foreground">
-                  Custom PC Builder
-                </Link>
+                {isBuilderEnabled && (
+                  <Link to="/builder" onClick={() => setOpen(false)} className="text-base font-bold text-foreground">
+                    Custom PC Builder
+                  </Link>
+                )}
                 <div className="border-t border-border pt-4">
                   <CategoriesMenuMobile onNavigate={() => setOpen(false)} />
                 </div>
@@ -495,9 +499,11 @@ export default function Navbar() {
             <Link to="/shop?category=peripheriques" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               {i18n.language?.startsWith('en') ? 'Peripherals' : 'Périphériques'}
             </Link>
-            <Link to="/builder" className="flex items-center gap-1 font-bold text-volt hover:text-volt-dim transition-colors">
-              <Sliders className="h-3.5 w-3.5" /> {t('hero.pcBuilder', 'Configurateur PC')}
-            </Link>
+            {isBuilderEnabled && (
+              <Link to="/builder" className="flex items-center gap-1 font-bold text-volt hover:text-volt-dim transition-colors">
+                <Sliders className="h-3.5 w-3.5" /> {t('hero.pcBuilder', 'Configurateur PC')}
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
