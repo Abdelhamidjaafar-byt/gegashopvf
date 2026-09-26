@@ -1,10 +1,13 @@
 import { Link } from 'react-router'
 import { Cpu, Laptop, Monitor, Apple, Gamepad2, Sliders, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const CATEGORIES = [
   {
     name: 'PC Gamer Setups',
+    frName: 'PC Gamer & Tours',
     subtitle: 'Pre-built & Custom Rig Towers',
+    frSubtitle: 'Configs prêtes & montages sur mesure',
     icon: Cpu,
     link: '/shop?category=pc-gamer',
     image: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400&q=80',
@@ -12,7 +15,9 @@ const CATEGORIES = [
   },
   {
     name: 'Components & GPUs',
+    frName: 'Composants & Cartes Graphiques',
     subtitle: 'Nvidia RTX, AMD, Motherboards, RAM',
+    frSubtitle: 'Nvidia RTX, AMD, Cartes mères, RAM',
     icon: Sliders,
     link: '/shop?category=composants',
     image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=400&q=80',
@@ -20,7 +25,9 @@ const CATEGORIES = [
   },
   {
     name: 'Gaming Laptops',
+    frName: 'PC Portables Gamer',
     subtitle: 'Asus ROG, MSI, Lenovo Legion',
+    frSubtitle: 'Asus ROG, MSI, Lenovo Legion',
     icon: Laptop,
     link: '/shop?category=laptops',
     image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&q=80',
@@ -28,7 +35,9 @@ const CATEGORIES = [
   },
   {
     name: 'Monitors & Displays',
+    frName: 'Écrans & Moniteurs',
     subtitle: '144Hz, 240Hz, 4K & Curved Gaming',
+    frSubtitle: '144Hz, 240Hz, 4K & Écrans Incurvés',
     icon: Monitor,
     link: '/shop?category=displays-tv',
     image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&q=80',
@@ -36,7 +45,9 @@ const CATEGORIES = [
   },
   {
     name: 'Apple Lineup',
+    frName: 'Univers Apple',
     subtitle: 'MacBook Pro, Air, iPad & iMac',
+    frSubtitle: 'MacBook Pro, Air, iPad & iMac',
     icon: Apple,
     link: '/shop?category=univers-apple-mac',
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80',
@@ -44,7 +55,9 @@ const CATEGORIES = [
   },
   {
     name: 'Chairs & Ergonomics',
+    frName: 'Chaises & Bureaux',
     subtitle: 'Corsair T3, Noblechairs & Desk Setups',
+    frSubtitle: 'Corsair T3, Noblechairs & Ergonomie',
     icon: Gamepad2,
     link: '/shop?category=chaises-et-bureaux',
     image: 'https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=400&q=80',
@@ -53,15 +66,18 @@ const CATEGORIES = [
 ]
 
 export default function BetaCategoryGrid() {
+  const { t, i18n } = useTranslation()
+  const isEn = i18n.language?.startsWith('en')
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <div className="flex items-end justify-between border-b border-border/80 pb-4 mb-6">
         <div>
           <span className="text-xs font-extrabold uppercase tracking-widest text-volt">
-            EXPLORE TECH SPECTRUM
+            {t('categoriesGrid.badge', 'EXPLORER LA TECH')}
           </span>
           <h2 className="font-display text-2xl md:text-3xl font-black tracking-tight mt-0.5">
-            Shop By Main Categories
+            {t('categoriesGrid.title', 'Acheter par Catégorie Principale')}
           </h2>
         </div>
 
@@ -69,7 +85,7 @@ export default function BetaCategoryGrid() {
           to="/shop"
           className="hidden sm:inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-volt hover:underline"
         >
-          All Categories <ArrowRight className="h-4 w-4" />
+          {t('categoriesGrid.allCategories', 'Toutes les catégories')} <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 
@@ -91,17 +107,17 @@ export default function BetaCategoryGrid() {
                 </div>
 
                 <h3 className="font-bold text-sm text-foreground mt-3 group-hover:text-volt transition-colors">
-                  {cat.name}
+                  {isEn ? cat.name : cat.frName}
                 </h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-                  {cat.subtitle}
+                  {isEn ? cat.subtitle : cat.frSubtitle}
                 </p>
               </div>
 
               <div className="mt-4 flex items-center justify-center h-24 overflow-hidden rounded-lg bg-secondary/40 p-2">
                 <img
                   src={cat.image}
-                  alt={cat.name}
+                  alt={isEn ? cat.name : cat.frName}
                   className="h-full w-auto object-contain group-hover:scale-110 transition-transform duration-300"
                 />
               </div>

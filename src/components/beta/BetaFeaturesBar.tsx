@@ -1,33 +1,36 @@
 import { Truck, Headset, RefreshCw, Award } from 'lucide-react'
-
-const FEATURES = [
-  {
-    icon: Truck,
-    title: 'Fast Nationwide Delivery',
-    subtitle: 'Free shipping across Morocco on orders above 500 MAD (Cathedis)',
-  },
-  {
-    icon: Headset,
-    title: 'Support 24/7 & Advice',
-    subtitle: 'Expert build help & phone support (+212 673 881 080)',
-  },
-  {
-    icon: RefreshCw,
-    title: 'Real-time Order Tracking',
-    subtitle: 'Track your parcel status directly step-by-step from your account',
-  },
-  {
-    icon: Award,
-    title: '100% Authentic & Warranted',
-    subtitle: 'Genuine components with official distributor warranty',
-  },
-]
+import { useTranslation } from 'react-i18next'
 
 export default function BetaFeaturesBar() {
+  const { t } = useTranslation()
+
+  const features = [
+    {
+      icon: Truck,
+      title: t('features.deliveryTitle', 'Livraison Rapide Partout au Maroc'),
+      subtitle: t('features.deliverySub', 'Livraison offerte dès 500 MAD partout au Maroc (Cathedis)'),
+    },
+    {
+      icon: Headset,
+      title: t('features.supportTitle', 'Support 24/7 & Conseils'),
+      subtitle: t('features.supportSub', 'Aide au montage & assistance téléphonique (+212 673 881 080)'),
+    },
+    {
+      icon: RefreshCw,
+      title: t('features.trackingTitle', 'Suivi de Colis en Temps Réel'),
+      subtitle: t('features.trackingSub', 'Suivez l\'état d\'acheminement de votre colis depuis votre compte'),
+    },
+    {
+      icon: Award,
+      title: t('features.warrantyTitle', '100% Authentique & Garanti'),
+      subtitle: t('features.warrantySub', 'Composants originaux avec garantie distributeur officiel'),
+    },
+  ]
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {FEATURES.map((item, idx) => {
+        {features.map((item, idx) => {
           const Icon = item.icon
           return (
             <div

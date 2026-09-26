@@ -85,18 +85,18 @@ const HERO_SLIDES = [
 ]
 
 const QUICK_CATEGORIES = [
-  { name: 'PC Gamer', icon: Cpu, link: '/shop?category=pc-gamer', color: 'from-amber-500/20 to-orange-500/10 text-amber-500' },
-  { name: 'Laptops', icon: Laptop, link: '/shop?category=laptops', color: 'from-blue-500/20 to-cyan-500/10 text-blue-500' },
-  { name: 'Monitors', icon: Monitor, link: '/shop?category=displays-tv', color: 'from-purple-500/20 to-indigo-500/10 text-purple-400' },
-  { name: 'Apple', icon: Apple, link: '/shop?q=Apple', color: 'from-neutral-500/20 to-stone-500/10 text-foreground' },
-  { name: 'Components', icon: Sliders, link: '/shop?category=composants', color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400' },
-  { name: 'Gaming Chairs', icon: Gamepad2, link: '/shop?q=Chair', color: 'from-rose-500/20 to-pink-500/10 text-rose-400' },
-  { name: 'Storage', icon: HardDrive, link: '/shop?q=SSD', color: 'from-sky-500/20 to-blue-500/10 text-sky-400' },
-  { name: 'Peripherals', icon: Headphones, link: '/shop?category=peripheriques', color: 'from-yellow-500/20 to-amber-500/10 text-yellow-400' },
+  { name: 'PC Gamer', frName: 'PC Gamer', icon: Cpu, link: '/shop?category=pc-gamer', color: 'from-amber-500/20 to-orange-500/10 text-amber-500' },
+  { name: 'Laptops', frName: 'PC Portables', icon: Laptop, link: '/shop?category=laptops', color: 'from-blue-500/20 to-cyan-500/10 text-blue-500' },
+  { name: 'Monitors', frName: 'Écrans', icon: Monitor, link: '/shop?category=displays-tv', color: 'from-purple-500/20 to-indigo-500/10 text-purple-400' },
+  { name: 'Apple', frName: 'Apple', icon: Apple, link: '/shop?q=Apple', color: 'from-neutral-500/20 to-stone-500/10 text-foreground' },
+  { name: 'Components', frName: 'Composants', icon: Sliders, link: '/shop?category=composants', color: 'from-emerald-500/20 to-teal-500/10 text-emerald-400' },
+  { name: 'Gaming Chairs', frName: 'Chaises Gamer', icon: Gamepad2, link: '/shop?q=Chair', color: 'from-rose-500/20 to-pink-500/10 text-rose-400' },
+  { name: 'Storage', frName: 'Stockage', icon: HardDrive, link: '/shop?q=SSD', color: 'from-sky-500/20 to-blue-500/10 text-sky-400' },
+  { name: 'Peripherals', frName: 'Périphériques', icon: Headphones, link: '/shop?category=peripheriques', color: 'from-yellow-500/20 to-amber-500/10 text-yellow-400' },
 ]
 
 export default function BetaHero() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { products } = useProducts()
   const { categories } = useCategories()
   const { offers } = useOffers()
@@ -259,17 +259,17 @@ export default function BetaHero() {
             {/* Header Badge */}
             <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-volt/15 border border-volt/40 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-volt">
-                <Flame className="h-3.5 w-3.5 fill-volt animate-bounce" /> Flash Sale
+                <Flame className="h-3.5 w-3.5 fill-volt animate-bounce" /> {t('hero.flashSale', 'Vente Flash')}
               </span>
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
-                Offer of Day
+                {t('hero.offerOfDay', 'Offre du Jour')}
               </span>
             </div>
 
             {/* Product Image & Discount Tag */}
             <div className="relative mt-4 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-secondary/40 p-3">
               <span className="absolute top-2 left-2 z-10 rounded-md bg-volt px-2 py-1 text-xs font-black text-volt-fg shadow-md">
-                -{flashOffer?.discount_percent || 20}% OFF
+                -{flashOffer?.discount_percent || 20}% {t('hero.promo', 'PROMO')}
               </span>
 
               {flashProduct?.images?.[0] ? (
@@ -293,7 +293,7 @@ export default function BetaHero() {
                 {flashOffer?.title || flashProduct?.name || 'PC Gamer Intel Core i7 13700F + RTX 4070'}
               </h3>
               <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                {flashOffer?.description || flashProduct?.description || 'High speed gaming workstation with DDR5 RAM & NVMe SSD.'}
+                {flashOffer?.description || flashProduct?.description || (i18n.language?.startsWith('en') ? 'High speed gaming workstation with DDR5 RAM & NVMe SSD.' : 'Station de jeu haute vitesse avec RAM DDR5 et SSD NVMe.')}
               </p>
             </div>
 
@@ -310,24 +310,24 @@ export default function BetaHero() {
             {/* Countdown Box */}
             <div className="mt-4 rounded-lg border border-border/80 bg-secondary/50 p-2.5">
               <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-center mb-1.5">
-                Time Remaining:
+                {t('hero.timeRemaining', 'Temps restant :')}
               </div>
               <div className="grid grid-cols-4 gap-1 text-center font-mono font-bold text-xs">
                 <div className="bg-background rounded border border-border/60 py-1">
                   <span className="text-volt text-sm">{String(d).padStart(2, '0')}</span>
-                  <div className="text-[9px] text-muted-foreground font-sans">Days</div>
+                  <div className="text-[9px] text-muted-foreground font-sans">{t('hero.days', 'Jours')}</div>
                 </div>
                 <div className="bg-background rounded border border-border/60 py-1">
                   <span className="text-volt text-sm">{String(h).padStart(2, '0')}</span>
-                  <div className="text-[9px] text-muted-foreground font-sans">Hrs</div>
+                  <div className="text-[9px] text-muted-foreground font-sans">{t('hero.hrs', 'Heures')}</div>
                 </div>
                 <div className="bg-background rounded border border-border/60 py-1">
                   <span className="text-volt text-sm">{String(m).padStart(2, '0')}</span>
-                  <div className="text-[9px] text-muted-foreground font-sans">Min</div>
+                  <div className="text-[9px] text-muted-foreground font-sans">{t('hero.min', 'Min')}</div>
                 </div>
                 <div className="bg-background rounded border border-border/60 py-1">
                   <span className="text-volt text-sm">{String(s).padStart(2, '0')}</span>
-                  <div className="text-[9px] text-muted-foreground font-sans">Sec</div>
+                  <div className="text-[9px] text-muted-foreground font-sans">{t('hero.sec', 'Sec')}</div>
                 </div>
               </div>
             </div>
@@ -335,8 +335,8 @@ export default function BetaHero() {
             {/* Stock Progress Bar */}
             <div className="mt-3">
               <div className="flex justify-between text-[10px] font-medium text-muted-foreground mb-1">
-                <span>Sold: {flashOffer?.claimed_percentage || 74}%</span>
-                <span className="text-volt font-bold">Limited Stock!</span>
+                <span>{t('hero.sold', 'Vendu :')} {flashOffer?.claimed_percentage || 74}%</span>
+                <span className="text-volt font-bold">{t('hero.limitedStock', 'Stock limité !')}</span>
               </div>
               <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                 <div
@@ -351,7 +351,7 @@ export default function BetaHero() {
             to={flashProduct ? getProductUrl(flashProduct) : '/deals'}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-volt py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:shadow-md"
           >
-            Get Deal Now <ArrowRight className="h-3.5 w-3.5" />
+            {t('hero.getDealNow', 'Profiter de l\'offre')} <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
@@ -409,7 +409,7 @@ export default function BetaHero() {
                   </span>
                 )}
                 <span className="rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-xs font-bold">
-                  Free Shipping Morocco
+                  {t('hero.freeShippingMorocco', 'Livraison Gratuite Maroc')}
                 </span>
               </div>
             </div>
@@ -420,13 +420,13 @@ export default function BetaHero() {
                   to={currentSlide.link}
                   className="inline-flex items-center gap-2 rounded-lg bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105 shadow-md"
                 >
-                  Discover <ArrowRight className="h-3.5 w-3.5" />
+                  {t('hero.discover', 'Découvrir')} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   to="/builder"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 backdrop-blur px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors"
                 >
-                  <Sliders className="h-3.5 w-3.5 text-volt" /> PC Builder
+                  <Sliders className="h-3.5 w-3.5 text-volt" /> {t('hero.pcBuilder', 'Configurateur PC')}
                 </Link>
               </div>
 
@@ -454,7 +454,7 @@ export default function BetaHero() {
           {/* QUICK CATEGORY CIRCLES GRID */}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-volt" /> Hot Categories
+              <Sparkles className="h-3.5 w-3.5 text-volt" /> {t('hero.hotCategories', 'Catégories Populaires')}
             </h4>
             <div className="grid grid-cols-4 gap-2 text-center">
               {QUICK_CATEGORIES.map((cat, i) => {
@@ -469,7 +469,7 @@ export default function BetaHero() {
                       <Icon className="h-5 w-5" />
                     </div>
                     <span className="text-[10px] font-semibold leading-tight text-muted-foreground group-hover:text-foreground line-clamp-1">
-                      {cat.name}
+                      {i18n.language?.startsWith('en') ? cat.name : cat.frName}
                     </span>
                   </Link>
                 )
@@ -485,17 +485,17 @@ export default function BetaHero() {
               {/* Header Badge */}
               <div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-volt/15 border border-volt/40 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-volt">
-                  <Sparkles className="h-3.5 w-3.5 text-volt" /> Best Pick
+                  <Sparkles className="h-3.5 w-3.5 text-volt" /> {t('hero.bestPick', 'Meilleur Choix')}
                 </span>
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
-                  PC Gamer Special
+                  {t('hero.pcGamerSpecial', 'Spécial PC Gamer')}
                 </span>
               </div>
 
               {/* Product Image & Discount Tag */}
               <div className="relative mt-3 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-secondary/40 p-3 border border-border/50">
                 <span className="absolute top-2 left-2 z-10 rounded-md bg-volt px-2 py-0.5 text-xs font-black text-volt-fg shadow-md">
-                  BEST DEAL
+                  {t('hero.bestDeal', 'MEILLEURE OFFRE')}
                 </span>
 
                 {bestPickProduct?.images?.[0] ? (
@@ -520,7 +520,7 @@ export default function BetaHero() {
                 </h3>
                 <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                   {bestPickProduct
-                    ? (bestPickProduct.description || 'Custom PC gamer build with authentic components & official warranty.')
+                    ? (bestPickProduct.description || (i18n.language?.startsWith('en') ? 'Custom PC gamer build with authentic components & official warranty.' : 'Configuration PC gamer sur mesure avec composants d\'origine & garantie officielle.'))
                     : '16GB DDR4 3200MHz | 1TB NVMe M.2 SSD | 650W Bronze PSU | Tempered Glass Case'}
                 </p>
               </div>
@@ -540,7 +540,7 @@ export default function BetaHero() {
                 to={bestPickProduct ? getProductUrl(bestPickProduct) : '/shop?category=pc-gamer'}
                 className="rounded-lg bg-volt px-3.5 py-2 text-xs font-bold text-volt-fg hover:bg-volt-dim shadow-sm transition-all"
               >
-                Configure
+                {t('hero.configure', 'Decouvrir ')}
               </Link>
             </div>
           </div>

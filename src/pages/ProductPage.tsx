@@ -133,7 +133,16 @@ export default function ProductPage() {
             </span>
           </div>
           <p className="mt-5 font-display text-3xl font-bold text-volt">{formatPrice(Number(product.price), i18n.language)}</p>
-          <div className="mt-2"><StockBadge stock={product.stock} /></div>
+          <div className="mt-2 flex items-center gap-2">
+            <StockBadge stock={product.stock} />
+            {(Boolean((product as any).is_new) ||
+              String(product.specs?.is_new) === 'true' ||
+              new Date().getTime() - new Date(product.created_at).getTime() < 14 * 24 * 60 * 60 * 1000) && (
+              <span className="rounded bg-volt/15 border border-volt/30 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-volt shadow-[0_0_8px_rgba(209,166,91,0.2)]">
+                {t('badge.newArrival', 'NOUVEL ARRIVAGE')}
+              </span>
+            )}
+          </div>
           <p className="mt-5 leading-relaxed text-muted-foreground">{product.description}</p>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

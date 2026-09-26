@@ -47,7 +47,7 @@ const APPLE_PRODUCTS = [
 ]
 
 export default function BetaAppleSpotlight() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -61,13 +61,13 @@ export default function BetaAppleSpotlight() {
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-purple-500/20 pb-6">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 border border-purple-400/40 px-3 py-1 text-xs font-bold uppercase tracking-widest text-purple-300">
-              <Apple className="h-4 w-4 text-purple-300" /> Authorized Quality & Original Gear
+              <Apple className="h-4 w-4 text-purple-300" /> {t('apple.badge', 'Qualité Garantie & Matériel Original')}
             </span>
             <h2 className="mt-2 font-display text-3xl md:text-4xl font-black text-white tracking-tight">
-              Hand Picked Apple Lineup
+              {t('apple.title', 'Sélection Univers Apple')}
             </h2>
             <p className="mt-1 text-sm text-purple-200/80 max-w-2xl">
-              Authentic MacBooks, iPads & Desktops with official warranty, fast delivery & expert setup in Morocco.
+              {t('apple.sub', 'MacBooks, iPads & iMacs authentiques avec garantie officielle, livraison rapide & support au Maroc.')}
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export default function BetaAppleSpotlight() {
             to="/shop?category=univers-apple-mac"
             className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white transition-all hover:bg-purple-500 hover:shadow-lg hover:shadow-purple-500/30"
           >
-            Explore All Apple <ArrowRight className="h-4 w-4" />
+            {t('apple.explore', 'Découvrir tout l\'univers Apple')} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -124,7 +124,7 @@ export default function BetaAppleSpotlight() {
                   to={`/shop?q=${encodeURIComponent(item.name.split(' ')[0])}`}
                   className="rounded-lg bg-volt px-3 py-1.5 text-xs font-extrabold text-volt-fg hover:bg-volt-dim transition-colors"
                 >
-                  Order
+                  {t('apple.order', 'Commander')}
                 </Link>
               </div>
             </div>

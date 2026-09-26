@@ -45,6 +45,11 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
     toast.success(t(now ? 'product.addedToWishlist' : 'product.removedFromWishlist'))
   }
 
+  const isNewProduct =
+    Boolean((product as any).is_new) ||
+    String(product.specs?.is_new) === 'true' ||
+    (new Date().getTime() - new Date(product.created_at).getTime() < 14 * 24 * 60 * 60 * 1000)
+
   return (
     <>
       <motion.div
@@ -70,7 +75,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
                 {product.name.slice(0, 2).toUpperCase()}
               </div>
             )}
-            <div className="absolute right-2 top-2 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-2 top-2 z-10 flex flex-col gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
               <Button size="icon" variant="secondary" className="h-8 w-8" onClick={toggleWish} aria-label={t('nav.wishlist')}>
                 <Heart className={`h-4 w-4 ${wished ? 'fill-volt text-volt' : ''}`} />
               </Button>
@@ -87,11 +92,18 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
                 <Eye className="h-4 w-4" />
               </Button>
             </div>
-            {product.is_featured && (
-              <span className="absolute left-2 top-2 bg-volt px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-volt-fg">
-                ★
-              </span>
-            )}
+            <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 items-start">
+              {isNewProduct && (
+                <span className="rounded bg-volt px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-volt-fg shadow-md border border-volt/30">
+                  {t('badge.new', 'NOUVEAU')}
+                </span>
+              )}
+              {product.is_featured && (
+                <span className="rounded bg-secondary/90 border border-border/80 px-1.5 py-0.5 text-[10px] font-bold text-volt shadow">
+                  ★
+                </span>
+              )}
+            </div>
           </div>
           <div className="space-y-1.5 p-4">
             <p className="truncate text-sm font-medium">{product.name}</p>

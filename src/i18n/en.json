@@ -55,6 +55,7 @@
   "product": {
     "addToCart": "Add to cart",
     "quickView": "Quick view",
+    "viewFullDetails": "View Full Product Details",
     "specs": "Specifications",
     "reviews": "Reviews",
     "writeReview": "Write a review",
@@ -308,5 +309,114 @@
       "psu": "Power supply",
       "case": "Case"
     }
+  },
+  "badge": {
+    "new": "NEW",
+    "newArrival": "NEW ARRIVAL",
+    "bestDeal": "BEST DEAL",
+    "hot": "HOT",
+    "featured": "FEATURED",
+    "flashSale": "FLASH SALE"
+  },
+  "hero": {
+    "hotCategories": "Hot Categories",
+    "bestPick": "Best Pick",
+    "pcGamerSpecial": "PC Gamer Special",
+    "bestDeal": "BEST DEAL",
+    "configure": "Discover",
+    "flashSale": "Flash Sale",
+    "offerOfDay": "Offer of Day",
+    "timeRemaining": "Time Remaining:",
+    "days": "Days",
+    "hrs": "Hrs",
+    "min": "Min",
+    "sec": "Sec",
+    "sold": "Sold:",
+    "limitedStock": "Limited Stock!",
+    "getDealNow": "Get Deal Now",
+    "freeShippingMorocco": "Free Shipping Morocco",
+    "discover": "Discover",
+    "pcBuilder": "PC Builder",
+    "newArrival": "NEW ARRIVAL",
+    "featured": "FEATURED",
+    "topPick": "TOP PICK",
+    "proBuild": "PRO BUILD",
+    "bestseller": "BESTSELLER",
+    "promo": "PROMO",
+    "specialAnnouncement": "SPECIAL ANNOUNCEMENT"
+  },
+  "navTop": {
+    "aboutUs": "About Us",
+    "ourPartners": "Our Partners",
+    "flashSales": "Flash Sales",
+    "trackOrder": "Track Your Order",
+    "contactUs": "Contact Us",
+    "faqs": "FAQs",
+    "support": "Support 24/7",
+    "item": "item",
+    "items": "items",
+    "searchPlaceholder": "Search for products, GPUs, laptops, CPUs...",
+    "search": "Search",
+    "categories": "Categories",
+    "products": "Products",
+    "liveResults": "Live Results",
+    "viewAllResults": "View all {{count}} results for",
+    "noResults": "No products found",
+    "liveDeals": "Live Deals"
+  },
+  "features": {
+    "deliveryTitle": "Fast Nationwide Delivery",
+    "deliverySub": "Free shipping across Morocco on orders above 500 MAD (Cathedis)",
+    "supportTitle": "Support 24/7 & Advice",
+    "supportSub": "Expert build help & phone support (+212 673 881 080)",
+    "trackingTitle": "Real-time Order Tracking",
+    "trackingSub": "Track your parcel status directly step-by-step from your account",
+    "warrantyTitle": "100% Authentic & Warranted",
+    "warrantySub": "Genuine components with official distributor warranty"
+  },
+  "apple": {
+    "badge": "Authorized Quality & Original Gear",
+    "title": "Hand Picked Apple Lineup",
+    "sub": "Authentic MacBooks, iPads & Desktops with official warranty, fast delivery & expert setup in Morocco.",
+    "explore": "Explore All Apple",
+    "order": "Order"
+  },
+  "categoriesGrid": {
+    "badge": "EXPLORE TECH SPECTRUM",
+    "title": "Shop By Main Categories",
+    "allCategories": "All Categories"
+  },
+  "banners": {
+    "chairsTag": "Ergonomic Pro Gaming",
+    "chairsTitle": "Corsair & Noblechairs Gaming Chairs",
+    "chairsSub": "Motorsport-inspired comfort, 4D armrests, breathable fabric & lumbar support to keep you sharp in long gaming sessions.",
+    "chairsPrice": "Starting from 2,490 MAD",
+    "chairsBtn": "Browse Gaming Chairs",
+    "builderTag": "Custom PC Builder Service",
+    "builderTitle": "Build & Test Your Dream PC in 24h",
+    "builderSub": "Choose your processor, graphics card, case & memory. Our technician team in Oujda assembles, benchmarks & tests your rig with warranty included!",
+    "builderBonus": "Free Cable Management & Thermal Paste",
+    "builderBtn": "Launch PC Builder"
+  },
+  "showcase": {
+    "badge": "High Performance Setups",
+    "title": "Featured PCs, Laptops & Components",
+    "all": "All Setups & Gear",
+    "intel": "Intel Gaming PCs",
+    "ryzen": "AMD Ryzen Builds",
+    "laptops": "Gaming Laptops",
+    "components": "Components & GPUs"
+  },
+  "footer": {
+    "tagline": "Gaming setups, authentic PC components & electronics delivered anywhere in Morocco.",
+    "shopCategories": "Shop Categories",
+    "customerSupport": "Customer Support",
+    "trackOrder": "Track Your Order",
+    "flashDeals": "Flash Sales & Deals",
+    "viewCart": "View Cart",
+    "myAccount": "My Account",
+    "storeContact": "Oujda Store & Contact",
+    "deliveryPartner": "Official Delivery Partner:",
+    "allRightsReserved": "All rights reserved."
   }
 }

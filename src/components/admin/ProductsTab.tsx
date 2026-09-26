@@ -117,6 +117,7 @@ interface FormState {
   specsValues: Record<string, string>
   customSpecs: CustomSpecItem[]
   is_featured: boolean
+  is_new: boolean
   is_builder: boolean
   builder_slot: string
   socket: string
@@ -125,7 +126,7 @@ interface FormState {
 
 const emptyForm: FormState = {
   name: '', description: '', price: '', stock: '', category_id: '', brand_id: '',
-  images: [], specsValues: {}, customSpecs: [], is_featured: false,
+  images: [], specsValues: {}, customSpecs: [], is_featured: false, is_new: true,
   is_builder: true, builder_slot: 'none', socket: '', watts: '',
 }
 
@@ -317,6 +318,11 @@ export default function ProductsTab() {
     const socketVal = p.specs?.['Socket'] || p.specs?.socket || ''
     const wattsVal = p.specs?.['Watts'] || p.specs?.watts || p.specs?.TDP || ''
 
+    const isNewSpec = p.specs?.is_new ?? p.specs?.['NEW Arrival']
+    const isNew = String(isNewSpec) === 'false'
+      ? false
+      : String(isNewSpec) === 'true' || (new Date().getTime() - new Date(p.created_at).getTime() < 14 * 24 * 60 * 60 * 1000)
+
     setForm({
       id: p.id,
       name: p.name,
@@ -329,6 +335,7 @@ export default function ProductsTab() {
       specsValues,
       customSpecs,
       is_featured: p.is_featured,
+      is_new: isNew,
       is_builder: isBuilder,
       builder_slot: builderSlot,
       socket: socketVal,
@@ -389,6 +396,8 @@ export default function ProductsTab() {
         specs[item.key.trim()] = item.value.trim()
       }
     }
+
+    specs['is_new'] = form.is_new ? 'true' : 'false'
 
     if (form.is_builder) {
       specs['is_builder'] = 'true'
@@ -1045,10 +1054,17 @@ export default function ProductsTab() {
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground">{t('admin.imageHint')}</p>
             </div>
-            <label className="flex items-center gap-2 text-sm sm:col-span-2">
-              <Checkbox checked={form.is_featured} onCheckedChange={(c) => setForm({ ...form, is_featured: Boolean(c) })} />
-              {t('admin.featured')}
-            </label>
+            <div className="flex flex-wrap items-center gap-6 sm:col-span-2 pt-2 border-t border-border/60">
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none font-semibold">
+                <Checkbox checked={form.is_featured} onCheckedChange={(c) => setForm({ ...form, is_featured: Boolean(c) })} />
+                ★ {t('admin.featured', 'Featured Product')}
+              </label>
+
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none font-semibold text-volt">
+                <Checkbox checked={form.is_new} onCheckedChange={(c) => setForm({ ...form, is_new: Boolean(c) })} />
+                ✨ Mark as "NEW" Arrival Badge
+              </label>
+            </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setOpen(false)}>{t('admin.cancel')}</Button>

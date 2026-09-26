@@ -1,11 +1,15 @@
 import { Link } from 'react-router'
 import { Apple, Gamepad2, Headphones, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const HIGHLIGHTS = [
   {
     title: 'Genuine Apple Lineup',
+    frTitle: 'Univers Apple Authentique',
     subtitle: 'Handpicked MacBooks, iPads & iMacs with official warranty.',
+    frSubtitle: 'MacBooks, iPads & iMacs avec garantie constructeur officielle.',
     cta: 'Explore Apple',
+    frCta: 'Découvrir Apple',
     link: '/shop?category=univers-apple-mac',
     icon: Apple,
     image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&q=80',
@@ -13,8 +17,11 @@ const HIGHLIGHTS = [
   },
   {
     title: 'Comfort = K/D/A Boost',
+    frTitle: 'Confort = Victoires Assurées',
     subtitle: 'Motorsport-inspired ergonomic gaming chairs built for long sessions.',
+    frSubtitle: 'Chaises gamer ergonomiques taillées pour vos longues sessions.',
     cta: 'Browse Chairs',
+    frCta: 'Voir les Chaises',
     link: '/shop?category=chaises-et-bureaux',
     icon: Gamepad2,
     image: 'https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=500&q=80',
@@ -22,8 +29,11 @@ const HIGHLIGHTS = [
   },
   {
     title: 'Add the Finishing Touch',
+    frTitle: 'La Touche Finale',
     subtitle: 'High precision mice, mechanical keyboards & immersive headsets.',
+    frSubtitle: 'Souris haute précision, claviers mécaniques & casques immersifs.',
     cta: 'See Accessories',
+    frCta: 'Voir Périphériques',
     link: '/shop?category=peripheriques',
     icon: Headphones,
     image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&q=80',
@@ -32,6 +42,9 @@ const HIGHLIGHTS = [
 ]
 
 export default function BetaHighlightCards() {
+  const { i18n } = useTranslation()
+  const isEn = i18n.language?.startsWith('en')
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -48,10 +61,10 @@ export default function BetaHighlightCards() {
                 </div>
 
                 <h3 className="font-display text-xl font-extrabold tracking-tight mt-4">
-                  {item.title}
+                  {isEn ? item.title : item.frTitle}
                 </h3>
                 <p className="mt-1 text-xs text-white/70 leading-relaxed">
-                  {item.subtitle}
+                  {isEn ? item.subtitle : item.frSubtitle}
                 </p>
               </div>
 
@@ -59,7 +72,7 @@ export default function BetaHighlightCards() {
                 <div className="h-24 w-28 overflow-hidden rounded-lg bg-black/30 p-1 flex items-center justify-center">
                   <img
                     src={item.image}
-                    alt={item.title}
+                    alt={isEn ? item.title : item.frTitle}
                     className="h-full w-auto object-contain group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
@@ -68,7 +81,7 @@ export default function BetaHighlightCards() {
                   to={item.link}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-volt px-4 py-2 text-xs font-black uppercase tracking-wider text-volt-fg hover:bg-volt-dim transition-colors"
                 >
-                  {item.cta} <ArrowRight className="h-3.5 w-3.5" />
+                  {isEn ? item.cta : item.frCta} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>

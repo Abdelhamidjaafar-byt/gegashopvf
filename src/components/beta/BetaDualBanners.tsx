@@ -1,7 +1,10 @@
 import { Link } from 'react-router'
 import { Gamepad2, Wrench, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function BetaDualBanners() {
+  const { t } = useTranslation()
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -12,25 +15,27 @@ export default function BetaDualBanners() {
           
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-md bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-400">
-              <Gamepad2 className="h-3.5 w-3.5" /> Ergonomic Pro Gaming
+              <Gamepad2 className="h-3.5 w-3.5" /> {t('banners.chairsTag', 'Gaming Ergonomique Pro')}
             </span>
 
             <h3 className="mt-4 font-display text-2xl md:text-3xl font-black tracking-tight">
-              Corsair & Noblechairs Gaming Chairs
+              {t('banners.chairsTitle', 'Chaises Gamer Corsair & Noblechairs')}
             </h3>
 
             <p className="mt-2 text-sm text-muted-foreground max-w-md leading-relaxed">
-              Motorsport-inspired comfort, 4D armrests, breathable fabric & lumbar support to keep you sharp in long gaming sessions.
+              {t('banners.chairsSub', 'Confort haute performance, accoudoirs 4D, tissu respirant et maintien lombaire pour vos longues sessions de jeu.')}
             </p>
           </div>
 
           <div className="mt-8 flex items-center justify-between border-t border-border/60 pt-4">
-            <span className="text-xs font-bold text-volt">Starting from 2,490 MAD</span>
+            <span className="text-xs font-bold text-volt">
+              {t('banners.chairsPrice', 'À partir de 2 490 MAD')}
+            </span>
             <Link
               to="/shop?q=Chair"
               className="inline-flex items-center gap-2 rounded-xl bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105"
             >
-              Browse Gaming Chairs <ArrowRight className="h-3.5 w-3.5" />
+              {t('banners.chairsBtn', 'Découvrir les Chaises Gamer')} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
@@ -41,25 +46,27 @@ export default function BetaDualBanners() {
 
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-md bg-volt/15 border border-volt/40 px-3 py-1 text-xs font-bold uppercase tracking-wider text-volt">
-              <Wrench className="h-3.5 w-3.5" /> Custom PC Builder Service
+              <Wrench className="h-3.5 w-3.5" /> {t('banners.builderTag', 'Service Montage PC Sur Mesure')}
             </span>
 
             <h3 className="mt-4 font-display text-2xl md:text-3xl font-black tracking-tight">
-              Build & Test Your Dream PC in 24h
+              {t('banners.builderTitle', 'Montez & Testez Votre PC de Rêve en 24h')}
             </h3>
 
             <p className="mt-2 text-sm text-muted-foreground max-w-md leading-relaxed">
-              Choose your processor, graphics card, case & memory. Our technician team in Oujda assembles, benchmarks, cable-manages & tests your rig with warranty included!
+              {t('banners.builderSub', 'Choisissez vos composants. Nos techniciens à Oujda assemblent, testent et optimisent votre setup avec garantie incluse !')}
             </p>
           </div>
 
           <div className="mt-8 flex items-center justify-between border-t border-border/60 pt-4">
-            <span className="text-xs font-bold text-muted-foreground">Free Cable Management & Thermal Paste</span>
+            <span className="text-xs font-bold text-muted-foreground">
+              {t('banners.builderBonus', 'Câble management propre & pâte thermique offerte')}
+            </span>
             <Link
               to="/builder"
               className="inline-flex items-center gap-2 rounded-xl bg-volt px-5 py-2.5 text-xs font-extrabold uppercase tracking-wide text-volt-fg transition-all hover:bg-volt-dim hover:scale-105"
             >
-              Launch PC Builder <ArrowRight className="h-3.5 w-3.5" />
+              {t('banners.builderBtn', 'Lancer le Configurateur')} <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>

@@ -118,19 +118,19 @@ export default function Navbar() {
 
           {/* Top Left Menu */}
           <div className="flex items-center gap-4">
-            <Link to="/shop" className="hover:text-volt transition-colors font-medium">About Us</Link>
+            <Link to="/shop" className="hover:text-volt transition-colors font-medium">{t('navTop.aboutUs', 'À propos')}</Link>
             <span>•</span>
-            <Link to="/shop" className="hover:text-volt transition-colors font-medium">Our Partners</Link>
+            <Link to="/shop" className="hover:text-volt transition-colors font-medium">{t('navTop.ourPartners', 'Nos Partenaires')}</Link>
             <span>•</span>
             <Link to="/deals" className="flex items-center gap-1 font-bold text-volt hover:text-volt-dim transition-colors">
-              <Flame className="h-3 w-3 fill-volt" /> Flash Sales
+              <Flame className="h-3 w-3 fill-volt" /> {t('navTop.flashSales', 'Ventes Flash')}
             </Link>
           </div>
 
           {/* Top Right Menu */}
           <div className="flex items-center gap-4">
             <Link to="/profile?tab=orders" className="flex items-center gap-1 hover:text-volt transition-colors font-medium">
-              <Truck className="h-3 w-3 text-volt" /> Track Your Order
+              <Truck className="h-3 w-3 text-volt" /> {t('navTop.trackOrder', 'Suivre votre commande')}
             </Link>
             <span>•</span>
             <a
@@ -139,11 +139,11 @@ export default function Navbar() {
               rel="noopener noreferrer"
               className="flex items-center gap-1 hover:text-volt transition-colors font-medium"
             >
-              <Phone className="h-3 w-3 text-volt" /> Contact Us
+              <Phone className="h-3 w-3 text-volt" /> {t('navTop.contactUs', 'Contactez-nous')}
             </a>
             <span>•</span>
             <Link to="/shop" className="flex items-center gap-1 hover:text-volt transition-colors font-medium">
-              <HelpCircle className="h-3 w-3 text-volt" /> FAQs
+              <HelpCircle className="h-3 w-3 text-volt" /> {t('navTop.faqs', 'FAQ')}
             </Link>
           </div>
 
@@ -177,7 +177,7 @@ export default function Navbar() {
                   setShowResults(true)
                 }}
                 onFocus={() => setShowResults(true)}
-                placeholder="Search for products, GPUs, laptops, CPUs..."
+                placeholder={t('navTop.searchPlaceholder', 'Rechercher des produits, PC gamer, composants...')}
                 className="h-10 pl-4 pr-24 bg-secondary border-border focus-visible:ring-volt rounded-l-lg rounded-r-none text-xs"
               />
               {q && (
@@ -197,7 +197,7 @@ export default function Navbar() {
                 type="submit"
                 className="h-10 rounded-l-none rounded-r-lg bg-volt text-volt-fg hover:bg-volt-dim px-5 text-xs font-bold uppercase tracking-wider shrink-0"
               >
-                <Search className="h-4 w-4 mr-1" /> Search
+                <Search className="h-4 w-4 mr-1" /> {t('navTop.search', 'Rechercher')}
               </Button>
             </div>
           </form>
@@ -210,7 +210,7 @@ export default function Navbar() {
               {matchingCategories.length > 0 && (
                 <div className="mb-2 pb-2 border-b border-border/60">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase px-3 py-1 tracking-wider">
-                    Categories
+                    {t('navTop.categories', 'Catégories')}
                   </div>
                   <div className="flex flex-wrap gap-1.5 px-2 pt-0.5">
                     {matchingCategories.map((cat) => (
@@ -231,8 +231,8 @@ export default function Navbar() {
               {searchResults.length > 0 ? (
                 <div className="space-y-1">
                   <div className="text-[10px] font-bold text-muted-foreground uppercase px-3 py-1 tracking-wider flex justify-between items-center">
-                    <span>Products ({searchResults.length})</span>
-                    <span className="text-volt font-semibold text-[9px]">Live Results</span>
+                    <span>{t('navTop.products', 'Produits')} ({searchResults.length})</span>
+                    <span className="text-volt font-semibold text-[9px]">{t('navTop.liveResults', 'Résultats en direct')}</span>
                   </div>
 
                   {searchResults.map((product) => (
@@ -261,7 +261,7 @@ export default function Navbar() {
                           {product.name}
                         </h4>
                         <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                          {product.description || 'Authentic PC product'}
+                          {product.description || (i18n.language?.startsWith('en') ? 'Authentic PC product' : 'Produit high-tech authentique')}
                         </p>
                       </div>
 
@@ -270,9 +270,9 @@ export default function Navbar() {
                           {formatPrice(Number(product.price), i18n.language)}
                         </span>
                         {product.stock > 0 ? (
-                          <span className="text-[9px] font-bold text-emerald-500 uppercase">In Stock</span>
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase">{t('shop.inStock', 'En stock')}</span>
                         ) : (
-                          <span className="text-[9px] font-bold text-destructive uppercase">Out of Stock</span>
+                          <span className="text-[9px] font-bold text-destructive uppercase">{t('shop.outOfStock', 'Rupture de stock')}</span>
                         )}
                       </div>
                     </Link>
@@ -287,12 +287,12 @@ export default function Navbar() {
                     }}
                     className="w-full mt-2 rounded-lg bg-secondary py-2 text-center text-xs font-bold text-volt hover:bg-volt hover:text-volt-fg transition-all flex items-center justify-center gap-1"
                   >
-                    View All Results for "{q.trim()}" <ArrowRight className="h-3.5 w-3.5" />
+                    {t('navTop.viewAllResults', 'Voir tous les {{count}} résultats pour', { count: searchResults.length })} "{q.trim()}" <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ) : (
                 <div className="p-4 text-center">
-                  <p className="text-xs text-muted-foreground">No products found matching "{q.trim()}"</p>
+                  <p className="text-xs text-muted-foreground">{t('navTop.noResults', 'Aucun résultat trouvé')} "{q.trim()}"</p>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -301,7 +301,7 @@ export default function Navbar() {
                     }}
                     className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-volt hover:underline"
                   >
-                    Search in shop catalog <ArrowRight className="h-3 w-3" />
+                    {t('shop.allCategories', 'Toutes les catégories')} <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
               )}
@@ -318,7 +318,7 @@ export default function Navbar() {
               <Headset className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase leading-none">Support 24/7</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase leading-none">{t('navTop.support', 'Support 24/7')}</span>
               <a href={`tel:${STORE_PHONE_DISPLAY}`} className="text-xs font-extrabold text-foreground hover:text-volt transition-colors mt-0.5">
                 {STORE_PHONE_DISPLAY}
               </a>
@@ -327,10 +327,10 @@ export default function Navbar() {
 
           {/* LANGUAGE SWITCHER */}
           <button
-            onClick={() => setLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
+            onClick={() => setLanguage(i18n.language?.startsWith('fr') ? 'en' : 'fr')}
             className="text-xs font-bold tracking-widest px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-volt transition-colors"
           >
-            {i18n.language === 'fr' ? 'EN' : 'FR'}
+            {i18n.language?.startsWith('fr') ? 'EN' : 'FR'}
           </button>
 
           {/* WISHLIST LINK */}
@@ -352,7 +352,9 @@ export default function Navbar() {
                 )}
               </div>
               <div className="hidden sm:flex flex-col text-left">
-                <span className="text-[10px] text-muted-foreground leading-none">{count} {count === 1 ? 'item' : 'items'}</span>
+                <span className="text-[10px] text-muted-foreground leading-none">
+                  {count} {count === 1 ? t('navTop.item', 'article') : t('navTop.items', 'articles')}
+                </span>
                 <span className="text-xs font-extrabold text-volt mt-0.5">{formatPrice(cartSubtotal, i18n.language)}</span>
               </div>
             </Link>
@@ -473,34 +475,34 @@ export default function Navbar() {
           <div className="flex items-center gap-6">
             <CategoriesMenuDesktop />
             <Link to="/shop" className="font-semibold text-foreground hover:text-volt transition-colors">
-              ElectroGega Shop
+              {t('nav.shop', 'Boutique')}
             </Link>
             <Link to="/shop?category=pc-gamer" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               PC Gamer
             </Link>
             <Link to="/shop?category=laptops" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Laptops
+              {i18n.language?.startsWith('en') ? 'Laptops' : 'PC Portables'}
             </Link>
             <Link to="/shop?category=displays-tv" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Monitors
+              {i18n.language?.startsWith('en') ? 'Monitors' : 'Écrans'}
             </Link>
             <Link to="/shop?category=univers-apple-mac" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
               Apple
             </Link>
             <Link to="/shop?category=chaises-et-bureaux" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Gaming Chairs
+              {i18n.language?.startsWith('en') ? 'Gaming Chairs' : 'Chaises Gamer'}
             </Link>
             <Link to="/shop?category=peripheriques" className="font-semibold text-muted-foreground hover:text-foreground transition-colors">
-              Peripherals
+              {i18n.language?.startsWith('en') ? 'Peripherals' : 'Périphériques'}
             </Link>
             <Link to="/builder" className="flex items-center gap-1 font-bold text-volt hover:text-volt-dim transition-colors">
-              <Sliders className="h-3.5 w-3.5" /> PC Builder
+              <Sliders className="h-3.5 w-3.5" /> {t('hero.pcBuilder', 'Configurateur PC')}
             </Link>
           </div>
 
           <div className="flex items-center gap-4">
             <Link to="/deals" className="flex items-center gap-1 font-extrabold text-volt hover:underline">
-              <Flame className="h-3.5 w-3.5 fill-volt" /> Live Deals
+              <Flame className="h-3.5 w-3.5 fill-volt" /> {t('navTop.liveDeals', 'Offres en direct')}
             </Link>
           </div>
 

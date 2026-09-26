@@ -55,6 +55,7 @@
   "product": {
     "addToCart": "Ajouter au panier",
     "quickView": "Aperçu rapide",
+    "viewFullDetails": "Voir la fiche complète",
     "specs": "Caractéristiques",
     "reviews": "Avis",
     "writeReview": "Donner un avis",
@@ -308,5 +309,114 @@
       "psu": "Alimentation",
       "case": "Boîtier"
     }
+  },
+  "badge": {
+    "new": "NOUVEAU",
+    "newArrival": "NOUVEL ARRIVAGE",
+    "bestDeal": "MEILLEURE OFFRE",
+    "hot": "TENDANCE",
+    "featured": "EN VEDETTE",
+    "flashSale": "VENTE FLASH"
+  },
+  "hero": {
+    "hotCategories": "Catégories Populaires",
+    "bestPick": "Meilleur Choix",
+    "pcGamerSpecial": "Spécial PC Gamer",
+    "bestDeal": "MEILLEURE OFFRE",
+    "configure": "Decouvrir",
+    "flashSale": "Vente Flash",
+    "offerOfDay": "Offre du Jour",
+    "timeRemaining": "Temps restant :",
+    "days": "Jours",
+    "hrs": "Heures",
+    "min": "Min",
+    "sec": "Sec",
+    "sold": "Vendu :",
+    "limitedStock": "Stock limité !",
+    "getDealNow": "Profiter de l'offre",
+    "freeShippingMorocco": "Livraison Gratuite Maroc",
+    "discover": "Découvrir",
+    "pcBuilder": "Configurateur PC",
+    "newArrival": "NOUVEL ARRIVAGE",
+    "featured": "EN VEDETTE",
+    "topPick": "TOP CHOIX",
+    "proBuild": "CONFIG PRO",
+    "bestseller": "MEILLEURE VENTE",
+    "promo": "PROMO",
+    "specialAnnouncement": "ANNONCE SPÉCIALE"
+  },
+  "navTop": {
+    "aboutUs": "À propos",
+    "ourPartners": "Nos Partenaires",
+    "flashSales": "Ventes Flash",
+    "trackOrder": "Suivre votre commande",
+    "contactUs": "Contactez-nous",
+    "faqs": "FAQ",
+    "support": "Support 24/7",
+    "item": "article",
+    "items": "articles",
+    "searchPlaceholder": "Rechercher des produits, PC gamer, composants...",
+    "search": "Rechercher",
+    "categories": "Catégories",
+    "products": "Produits",
+    "liveResults": "Résultats en direct",
+    "viewAllResults": "Voir tous les {{count}} résultats pour",
+    "noResults": "Aucun résultat trouvé",
+    "liveDeals": "Offres en direct"
+  },
+  "features": {
+    "deliveryTitle": "Livraison Rapide Partout au Maroc",
+    "deliverySub": "Livraison offerte dès 500 MAD partout au Maroc (Cathedis)",
+    "supportTitle": "Support 24/7 & Conseils",
+    "supportSub": "Aide au montage & assistance téléphonique (+212 673 881 080)",
+    "trackingTitle": "Suivi de Colis en Temps Réel",
+    "trackingSub": "Suivez l'état d'acheminement de votre colis depuis votre compte",
+    "warrantyTitle": "100% Authentique & Garanti",
+    "warrantySub": "Composants originaux avec garantie distributeur officiel"
+  },
+  "apple": {
+    "badge": "Qualité Garantie & Matériel Original",
+    "title": "Sélection Univers Apple",
+    "sub": "MacBooks, iPads & iMacs authentiques avec garantie officielle, livraison rapide & support au Maroc.",
+    "explore": "Découvrir tout l'univers Apple",
+    "order": "Commander"
+  },
+  "categoriesGrid": {
+    "badge": "EXPLORER LA TECH",
+    "title": "Acheter par Catégorie Principale",
+    "allCategories": "Toutes les catégories"
+  },
+  "banners": {
+    "chairsTag": "Gaming Ergonomique Pro",
+    "chairsTitle": "Chaises Gamer Corsair & Noblechairs",
+    "chairsSub": "Confort haute performance, accoudoirs 4D, tissu respirant et maintien lombaire pour vos longues sessions de jeu.",
+    "chairsPrice": "À partir de 2 490 MAD",
+    "chairsBtn": "Découvrir les Chaises Gamer",
+    "builderTag": "Service Montage PC Sur Mesure",
+    "builderTitle": "Montez & Testez Votre PC de Rêve en 24h",
+    "builderSub": "Choisissez vos composants. Nos techniciens à Oujda assemblent, testent et optimisent votre setup avec garantie incluse !",
+    "builderBonus": "Câble management propre & pâte thermique offerte",
+    "builderBtn": "Lancer le Configurateur"
+  },
+  "showcase": {
+    "badge": "Performances Extrêmes",
+    "title": "PC, Portables & Composants en Vedette",
+    "all": "Tous les Setups & Matériel",
+    "intel": "PC Gamer Intel",
+    "ryzen": "Configs AMD Ryzen",
+    "laptops": "PC Portables Gamer",
+    "components": "Composants & Cartes Graphiques"
+  },
+  "footer": {
+    "tagline": "Setups gaming, composants PC originaux et matériel high-tech livrés partout au Maroc.",
+    "shopCategories": "Rayons de la boutique",
+    "customerSupport": "Support Client",
+    "trackOrder": "Suivre votre commande",
+    "flashDeals": "Ventes Flash & Bons Plans",
+    "viewCart": "Voir mon panier",
+    "myAccount": "Mon compte",
+    "storeContact": "Boutique Oujda & Contact",
+    "deliveryPartner": "Partenaire de livraison officiel :",
+    "allRightsReserved": "Tous droits réservés."
   }
 }
