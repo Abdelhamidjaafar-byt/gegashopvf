@@ -21,6 +21,21 @@ export function isInternalSpecKey(key: string): boolean {
   )
 }
 
+export function isShopFilterSpecKey(key: string): boolean {
+  if (!key) return false
+  if (isInternalSpecKey(key)) return false
+  const upper = key.trim().toUpperCase()
+  if (
+    upper === 'POIDS' ||
+    upper === 'WEIGHT' ||
+    upper.startsWith('POIDS') ||
+    upper.startsWith('WEIGHT')
+  ) {
+    return false
+  }
+  return true
+}
+
 export function filterPublicSpecs(
   specs?: Record<string, string> | null
 ): Array<[string, string]> {
