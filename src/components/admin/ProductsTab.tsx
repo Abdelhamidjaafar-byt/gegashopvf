@@ -871,7 +871,7 @@ export default function ProductsTab() {
 
       {/* Product Edit / Add Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto w-full sm:w-[50vw] sm:max-w-[50vw] md:w-[50vw] md:max-w-[50vw] max-w-[95vw]">
           <DialogHeader>
             <DialogTitle>{form.id ? t('admin.editProduct') : t('admin.addProduct')}</DialogTitle>
           </DialogHeader>
@@ -1052,11 +1052,11 @@ export default function ProductsTab() {
               </label>
             </div>
           </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setOpen(false)}>{t('admin.cancel')}</Button>
+          <div className="mt-4 flex justify-start items-center gap-2">
             <Button onClick={save} disabled={saving || !form.name || !form.price} className="bg-volt font-semibold text-volt-fg hover:bg-volt-dim">
               {t('admin.save')}
             </Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t('admin.cancel')}</Button>
           </div>
         </DialogContent>
       </Dialog>

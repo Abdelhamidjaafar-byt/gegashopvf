@@ -17,13 +17,16 @@ import {
   Zap,
   Box,
   Pencil,
-  Eye
+  Eye,
+  Upload,
+  Package,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useProducts, useCategories } from '@/hooks/useCatalog'
+import { useProducts, useCategories, useBrands } from '@/hooks/useCatalog'
 import { useBuilderSettings } from '@/hooks/useBuilderSettings'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
+import { fileToResizedDataUrl } from '@/lib/image'
 import type { Product } from '@/types'
 import type { SlotId } from '@/lib/builder-data'
 import { Button } from '@/components/ui/button'
@@ -68,6 +71,7 @@ const SLOTS: Array<{ id: SlotId; label: string; icon: any }> = [
 export default function BuilderTab() {
   const { products, refetch } = useProducts()
   const { categories } = useCategories()
+  const { brands } = useBrands()
   const { enabled, setBuilderEnabled, loading: settingsLoading } = useBuilderSettings()
 
   // Slot filter in components table
@@ -77,12 +81,23 @@ export default function BuilderTab() {
   // Add / Edit component modal
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [addMode, setAddMode] = useState<'select' | 'new'>('select')
   const [selectedProductId, setSelectedProductId] = useState<string>('')
   const [productSearch, setProductSearch] = useState('')
   const [builderSlot, setBuilderSlot] = useState<SlotId>('cpu')
   const [socket, setSocket] = useState('')
   const [watts, setWatts] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // New product form state
+  const [newProdName, setNewProdName] = useState('')
+  const [newProdPrice, setNewProdPrice] = useState('')
+  const [newProdStock, setNewProdStock] = useState('10')
+  const [newProdCategoryId, setNewProdCategoryId] = useState('')
+  const [newProdBrandId, setNewProdBrandId] = useState('')
+  const [newProdImage, setNewProdImage] = useState('')
+  const [newProdDesc, setNewProdDesc] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Category map
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
@@ -123,25 +138,34 @@ export default function BuilderTab() {
     })
   }, [builderProducts, selectedSlotFilter, searchQuery])
 
-  // Candidate products for adding to builder (non-builder products or all)
+  // Candidate products for select dropdown
   const candidateProducts = useMemo(() => {
     const q = productSearch.toLowerCase().trim()
-    return products
-      .filter((p) => {
-        if (!q) return true
-        return p.name.toLowerCase().includes(q)
-      })
-      .slice(0, 15)
+    if (!q) return products
+    return products.filter((p) => p.name.toLowerCase().includes(q))
   }, [products, productSearch])
+
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductId),
+    [products, selectedProductId],
+  )
 
   // Open add modal
   const handleOpenAddModal = () => {
     setEditingProduct(null)
-    setSelectedProductId('')
+    setAddMode('select')
+    setSelectedProductId(products[0]?.id || '')
     setProductSearch('')
     setBuilderSlot('cpu')
     setSocket('')
     setWatts('')
+    setNewProdName('')
+    setNewProdPrice('')
+    setNewProdStock('10')
+    setNewProdCategoryId(categories[0]?.id || '')
+    setNewProdBrandId('')
+    setNewProdImage('')
+    setNewProdDesc('')
     setIsModalOpen(true)
   }
 
@@ -158,44 +182,111 @@ export default function BuilderTab() {
 
   // Save component to builder
   const handleSaveComponent = async () => {
-    const targetProduct = editingProduct || products.find((p) => p.id === selectedProductId)
-    if (!targetProduct) {
-      toast.error('Veuillez sélectionner un produit')
-      return
-    }
-
     setSaving(true)
     try {
-      const currentSpecs = { ...(targetProduct.specs || {}) }
-      currentSpecs['BUILDER_SLOT'] = builderSlot.toLowerCase()
-      currentSpecs['IS_BUILDER'] = 'true'
+      if (editingProduct) {
+        // Updating existing builder component
+        const currentSpecs = { ...(editingProduct.specs || {}) }
+        currentSpecs['BUILDER_SLOT'] = builderSlot.toLowerCase()
+        currentSpecs['IS_BUILDER'] = 'true'
 
-      if (socket.trim()) {
-        currentSpecs['SOCKET'] = socket.trim().toUpperCase()
+        if (socket.trim()) {
+          currentSpecs['SOCKET'] = socket.trim().toUpperCase()
+        } else {
+          delete currentSpecs['SOCKET']
+          delete currentSpecs['Socket']
+        }
+
+        if (watts.trim()) {
+          currentSpecs['WATTS'] = watts.trim()
+        } else {
+          delete currentSpecs['WATTS']
+          delete currentSpecs['Watts']
+        }
+
+        const { error } = await supabase
+          .from('products')
+          .update({ specs: currentSpecs })
+          .eq('id', editingProduct.id)
+
+        if (error) throw error
+
+        toast.success('Composant mis à jour avec succès')
+      } else if (addMode === 'select') {
+        // Selecting existing product from catalog
+        const targetProduct = products.find((p) => p.id === selectedProductId)
+        if (!targetProduct) {
+          toast.error('Veuillez sélectionner un produit')
+          setSaving(false)
+          return
+        }
+
+        const currentSpecs = { ...(targetProduct.specs || {}) }
+        currentSpecs['BUILDER_SLOT'] = builderSlot.toLowerCase()
+        currentSpecs['IS_BUILDER'] = 'true'
+
+        if (socket.trim()) {
+          currentSpecs['SOCKET'] = socket.trim().toUpperCase()
+        } else {
+          delete currentSpecs['SOCKET']
+          delete currentSpecs['Socket']
+        }
+
+        if (watts.trim()) {
+          currentSpecs['WATTS'] = watts.trim()
+        } else {
+          delete currentSpecs['WATTS']
+          delete currentSpecs['Watts']
+        }
+
+        const { error } = await supabase
+          .from('products')
+          .update({ specs: currentSpecs })
+          .eq('id', targetProduct.id)
+
+        if (error) throw error
+
+        toast.success(`Produit "${targetProduct.name}" ajouté au Configurateur PC`)
       } else {
-        delete currentSpecs['SOCKET']
-        delete currentSpecs['Socket']
+        // Creating brand new product and assigning to builder
+        if (!newProdName.trim()) {
+          toast.error('Veuillez indiquer le nom du produit')
+          setSaving(false)
+          return
+        }
+        const priceNum = Number(newProdPrice)
+        if (isNaN(priceNum) || priceNum < 0 || !newProdPrice) {
+          toast.error('Veuillez indiquer un prix valide')
+          setSaving(false)
+          return
+        }
+
+        const newSpecs: Record<string, string> = {
+          BUILDER_SLOT: builderSlot.toLowerCase(),
+          IS_BUILDER: 'true',
+        }
+        if (socket.trim()) newSpecs['SOCKET'] = socket.trim().toUpperCase()
+        if (watts.trim()) newSpecs['WATTS'] = watts.trim()
+
+        const images = newProdImage.trim() ? [newProdImage.trim()] : []
+
+        const { error } = await supabase.from('products').insert({
+          name: newProdName.trim(),
+          description: newProdDesc.trim() || '',
+          price: priceNum,
+          stock: Number(newProdStock) || 10,
+          category_id: newProdCategoryId || null,
+          brand_id: newProdBrandId || null,
+          images,
+          specs: newSpecs,
+          is_featured: false,
+        })
+
+        if (error) throw error
+
+        toast.success(`Nouveau produit "${newProdName}" créé et ajouté au Configurateur PC !`)
       }
 
-      if (watts.trim()) {
-        currentSpecs['WATTS'] = watts.trim()
-      } else {
-        delete currentSpecs['WATTS']
-        delete currentSpecs['Watts']
-      }
-
-      const { error } = await supabase
-        .from('products')
-        .update({ specs: currentSpecs })
-        .eq('id', targetProduct.id)
-
-      if (error) throw error
-
-      toast.success(
-        editingProduct
-          ? 'Composant mis à jour avec succès'
-          : `Produit "${targetProduct.name}" ajouté au Configurateur PC`
-      )
       setIsModalOpen(false)
       refetch()
     } catch (err: any) {
@@ -507,7 +598,7 @@ export default function BuilderTab() {
 
       {/* 5. ADD / EDIT COMPONENT MODAL */}
       <Dialog open={isModalOpen} onOpenChange={(o) => !o && setIsModalOpen(false)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-full sm:w-[50vw] sm:max-w-[50vw] md:w-[50vw] md:max-w-[50vw] max-w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden min-w-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <SlidersHorizontal className="h-5 w-5 text-volt" />
@@ -519,42 +610,238 @@ export default function BuilderTab() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            {/* If Adding, pick a product */}
+            {/* If Adding, choose between Select existing product or Add new product */}
             {!editingProduct ? (
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold">Choisir un produit du catalogue</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Filtrer par nom de produit..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="pl-8 h-9 text-xs mb-2"
-                  />
+              <div className="space-y-3">
+                {/* Segmented Control on left */}
+                <div className="flex justify-start">
+                  <div className="inline-flex rounded-lg border border-border p-1 bg-secondary/40 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setAddMode('select')}
+                      className={`py-1.5 px-4 rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                        addMode === 'select'
+                          ? 'bg-card text-foreground shadow-sm font-bold border border-border'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Package className="h-3.5 w-3.5 text-volt" />
+                      Sélectionner un produit (Select)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddMode('new')}
+                      className={`py-1.5 px-4 rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                        addMode === 'new'
+                          ? 'bg-card text-foreground shadow-sm font-bold border border-border'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Plus className="h-3.5 w-3.5 text-volt" />
+                      + Ajouter un nouveau produit
+                    </button>
+                  </div>
                 </div>
 
-                <div className="max-h-44 overflow-y-auto rounded-lg border border-border divide-y divide-border/60 text-xs">
-                  {candidateProducts.map((p) => {
-                    const isSelected = selectedProductId === p.id
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => setSelectedProductId(p.id)}
-                        className={`flex items-center justify-between p-2.5 cursor-pointer transition-colors ${
-                          isSelected ? 'bg-volt/15 font-bold text-foreground' : 'hover:bg-secondary/40 text-muted-foreground'
-                        }`}
+                {addMode === 'select' ? (
+                  /* SELECT EXISTING PRODUCT */
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-semibold">Choisir un composant du catalogue</Label>
+                      <button
+                        type="button"
+                        onClick={() => setAddMode('new')}
+                        className="text-[11px] font-bold text-volt hover:underline flex items-center gap-1"
                       >
-                        <div className="flex items-center gap-2.5 truncate">
-                          <div className="h-7 w-7 rounded border border-border bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
-                            {p.images[0] && <img src={p.images[0]} alt="" className="h-full w-full object-contain" />}
+                        <Plus className="h-3 w-3" /> Nouveau produit
+                      </button>
+                    </div>
+
+                    {/* Filter Input */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Filtrer la liste des produits..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        className="pl-8 h-9 text-xs bg-secondary"
+                      />
+                    </div>
+
+                    {/* Select Input */}
+                    <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                      <SelectTrigger className="h-10 text-xs bg-secondary w-full min-w-0 max-w-full">
+                        <SelectValue placeholder="-- Sélectionnez un produit --" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {candidateProducts.length === 0 ? (
+                          <div className="p-3 text-xs text-center text-muted-foreground">
+                            Aucun produit correspondant.{' '}
+                            <button
+                              type="button"
+                              onClick={() => setAddMode('new')}
+                              className="text-volt font-bold hover:underline"
+                            >
+                              Créer un produit
+                            </button>
                           </div>
-                          <span className="truncate text-xs">{p.name}</span>
+                        ) : (
+                          candidateProducts.map((p) => (
+                            <SelectItem key={p.id} value={p.id} textValue={p.name} className="text-xs py-2">
+                              <div className="flex items-center justify-between w-full min-w-0 gap-3">
+                                <span className="truncate font-medium flex-1 text-left min-w-0">{p.name}</span>
+                                <span className="font-bold text-volt shrink-0 ml-2">{formatPrice(Number(p.price))}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Selected Product Preview Card */}
+                    {selectedProduct && (
+                      <div className="rounded-lg border border-volt/30 bg-volt/5 p-2.5 flex items-center justify-between animate-in fade-in-50">
+                        <div className="flex items-center gap-2.5 truncate">
+                          <div className="h-9 w-9 rounded border border-border bg-secondary overflow-hidden shrink-0 flex items-center justify-center">
+                            {selectedProduct.images[0] ? (
+                              <img src={selectedProduct.images[0]} alt="" className="h-full w-full object-contain" />
+                            ) : (
+                              <Package className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="truncate">
+                            <div className="font-bold text-xs text-foreground truncate">{selectedProduct.name}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              Stock: {selectedProduct.stock} | Catégorie: {selectedProduct.category_id ? categoryMap.get(selectedProduct.category_id) || 'Composant' : 'Composant'}
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-xs font-bold text-volt shrink-0 ml-2">{formatPrice(Number(p.price))}</span>
+                        <div className="font-bold text-xs text-volt shrink-0 ml-2">
+                          {formatPrice(Number(selectedProduct.price))}
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
+                    )}
+                  </div>
+                ) : (
+                  /* ADD NEW PRODUCT FORM */
+                  <div className="space-y-3 rounded-lg border border-border bg-secondary/20 p-3 animate-in fade-in-50">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <span className="text-xs font-bold flex items-center gap-1.5 text-volt">
+                        <Plus className="h-3.5 w-3.5" /> Créer un nouveau composant
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAddMode('select')}
+                        className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                      >
+                        ← Choisir un existant
+                      </button>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-semibold">Nom du composant / produit *</Label>
+                      <Input
+                        value={newProdName}
+                        onChange={(e) => setNewProdName(e.target.value)}
+                        placeholder="Ex: AMD Ryzen 7 7800X3D"
+                        className="h-8 text-xs bg-secondary"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold">Prix (MAD) *</Label>
+                        <Input
+                          type="number"
+                          value={newProdPrice}
+                          onChange={(e) => setNewProdPrice(e.target.value)}
+                          placeholder="Ex: 4800"
+                          className="h-8 text-xs bg-secondary"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold">Stock (Unités)</Label>
+                        <Input
+                          type="number"
+                          value={newProdStock}
+                          onChange={(e) => setNewProdStock(e.target.value)}
+                          placeholder="10"
+                          className="h-8 text-xs bg-secondary"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold">Catégorie</Label>
+                        <Select value={newProdCategoryId} onValueChange={setNewProdCategoryId}>
+                          <SelectTrigger className="h-8 text-xs bg-secondary">
+                            <SelectValue placeholder="Choisir catégorie..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((c) => (
+                              <SelectItem key={c.id} value={c.id} className="text-xs">
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[11px] font-semibold">Marque (Optionnel)</Label>
+                        <Select value={newProdBrandId} onValueChange={setNewProdBrandId}>
+                          <SelectTrigger className="h-8 text-xs bg-secondary">
+                            <SelectValue placeholder="Choisir marque..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {brands.map((b) => (
+                              <SelectItem key={b.id} value={b.id} className="text-xs">
+                                {b.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Image */}
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-semibold">Photo du produit</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={newProdImage}
+                          onChange={(e) => setNewProdImage(e.target.value)}
+                          placeholder="URL de l'image ou téléversez ci-contre"
+                          className="h-8 text-xs bg-secondary flex-1"
+                        />
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-xs font-semibold border border-border shrink-0">
+                          <Upload className="h-3.5 w-3.5 text-volt" />
+                          <span>{uploadingImage ? '...' : 'Upload'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setUploadingImage(true)
+                              try {
+                                const dataUrl = await fileToResizedDataUrl(file)
+                                setNewProdImage(dataUrl)
+                              } catch {
+                                toast.error('Erreur lors du traitement de l’image')
+                              } finally {
+                                setUploadingImage(false)
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-lg border border-border bg-secondary/30 p-3 flex items-center gap-3">
@@ -612,16 +899,26 @@ export default function BuilderTab() {
             </div>
           </div>
 
-          <DialogFooter className="mt-2">
-            <Button variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
-              Annuler
-            </Button>
+          <DialogFooter className="mt-2 sm:justify-start justify-start flex-row gap-3">
             <Button
               onClick={handleSaveComponent}
-              disabled={saving || (!editingProduct && !selectedProductId)}
+              disabled={
+                saving ||
+                (!editingProduct && addMode === 'select' && !selectedProductId) ||
+                (!editingProduct && addMode === 'new' && (!newProdName.trim() || !newProdPrice))
+              }
               className="bg-volt text-volt-fg hover:bg-volt-dim font-bold text-xs"
             >
-              {saving ? 'Enregistrement...' : editingProduct ? 'Enregistrer les modifications' : 'Ajouter au Configurateur'}
+              {saving
+                ? 'Enregistrement...'
+                : editingProduct
+                ? 'Enregistrer les modifications'
+                : addMode === 'new'
+                ? 'Créer et ajouter au Configurateur'
+                : 'Ajouter au Configurateur'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
+              Annuler
             </Button>
           </DialogFooter>
         </DialogContent>

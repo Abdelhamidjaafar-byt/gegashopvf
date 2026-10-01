@@ -9,10 +9,15 @@ import {
   Star,
   Percent,
   Timer,
+  Package,
+  Search,
+  Upload,
 } from 'lucide-react'
 import { useOffers } from '@/hooks/useOffers'
-import { useProducts } from '@/hooks/useCatalog'
+import { useProducts, useCategories } from '@/hooks/useCatalog'
+import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
+import { fileToResizedDataUrl } from '@/lib/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -49,12 +54,24 @@ import { toast } from 'sonner'
 export default function OffersTab() {
   const { i18n } = useTranslation()
   const { offers, createOffer, updateOffer, deleteOffer, toggleOfferActive, setDealOfDay } = useOffers()
-  const { products } = useProducts()
-
+  const { products, refetch } = useProducts()
+  const { categories } = useCategories()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingOffer, setEditingOffer] = useState<Offer | null>(null)
   const [deleteOfferId, setDeleteOfferId] = useState<string | null>(null)
+
+  // Product selection mode: 'select' (existing) or 'new' (create new product)
+  const [productMode, setProductMode] = useState<'select' | 'new'>('select')
+  const [productFilter, setProductFilter] = useState('')
+
+  // New product fields
+  const [newOfferProdName, setNewOfferProdName] = useState('')
+  const [newOfferProdPrice, setNewOfferProdPrice] = useState('')
+  const [newOfferProdStock, setNewOfferProdStock] = useState('10')
+  const [newOfferProdCategory, setNewOfferProdCategory] = useState('')
+  const [newOfferProdImage, setNewOfferProdImage] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Form states
   const [productId, setProductId] = useState('')
@@ -73,8 +90,19 @@ export default function OffersTab() {
     [products, productId]
   )
 
+  const candidateProducts = useMemo(() => {
+    const q = productFilter.toLowerCase().trim()
+    if (!q) return products
+    return products.filter((p) => p.name.toLowerCase().includes(q))
+  }, [products, productFilter])
+
   // Calculate prices based on selected product & discount
-  const originalPrice = selectedProduct ? Number(selectedProduct.price) : 0
+  const originalPrice = useMemo(() => {
+    if (productMode === 'new') {
+      return Number(newOfferProdPrice) || 0
+    }
+    return selectedProduct ? Number(selectedProduct.price) : 0
+  }, [productMode, newOfferProdPrice, selectedProduct])
 
   const handleProductChange = (id: string) => {
     setProductId(id)
@@ -82,6 +110,15 @@ export default function OffersTab() {
     if (prod) {
       if (!title) setTitle(prod.name)
       const calculated = Math.round(Number(prod.price) * (1 - discountPercent / 100))
+      setDiscountedPrice(calculated.toString())
+    }
+  }
+
+  const handleNewProductPriceChange = (priceVal: string) => {
+    setNewOfferProdPrice(priceVal)
+    const p = Number(priceVal) || 0
+    if (p > 0) {
+      const calculated = Math.round(p * (1 - discountPercent / 100))
       setDiscountedPrice(calculated.toString())
     }
   }
@@ -120,6 +157,13 @@ export default function OffersTab() {
 
   const openCreateModal = () => {
     setEditingOffer(null)
+    setProductMode('select')
+    setProductFilter('')
+    setNewOfferProdName('')
+    setNewOfferProdPrice('')
+    setNewOfferProdStock('10')
+    setNewOfferProdCategory(categories[0]?.id || '')
+    setNewOfferProdImage('')
     const firstProd = products[0]
     setProductId(firstProd ? firstProd.id : '')
     setTitle(firstProd ? firstProd.name : '')
@@ -140,6 +184,7 @@ export default function OffersTab() {
 
   const openEditModal = (off: Offer) => {
     setEditingOffer(off)
+    setProductMode('select')
     setProductId(off.product_id)
     setTitle(off.title)
     setBadge(off.badge)
@@ -161,20 +206,61 @@ export default function OffersTab() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!productId) {
-      toast.error('Please select a product')
-      return
+
+    if (!editingOffer && productMode === 'new') {
+      if (!newOfferProdName.trim()) {
+        toast.error('Please enter the new product name')
+        return
+      }
+      const pNum = Number(newOfferProdPrice)
+      if (isNaN(pNum) || pNum <= 0) {
+        toast.error('Please enter a valid regular price for the new product')
+        return
+      }
+    } else {
+      if (!productId) {
+        toast.error('Please select a product')
+        return
+      }
     }
+
     if (!endTime) {
       toast.error('Please set an end time for the offer timer')
       return
     }
 
+    let finalProductId = productId
+
+    if (!editingOffer && productMode === 'new') {
+      const { data: newProd, error: newProdErr } = await supabase
+        .from('products')
+        .insert({
+          name: newOfferProdName.trim(),
+          price: Number(newOfferProdPrice),
+          stock: Number(newOfferProdStock) || 10,
+          category_id: newOfferProdCategory || null,
+          images: newOfferProdImage.trim() ? [newOfferProdImage.trim()] : [],
+          description: description || '',
+          specs: {},
+          is_featured: isDealOfDay,
+        })
+        .select()
+        .single()
+
+      if (newProdErr) {
+        toast.error(newProdErr.message)
+        return
+      }
+
+      finalProductId = newProd.id
+      refetch()
+    }
+
     const payload = {
-      title,
+      title: title || (productMode === 'new' ? newOfferProdName : ''),
       badge,
       description,
-      product_id: productId,
+      product_id: finalProductId,
       discount_percent: discountPercent,
       discounted_price: Number(discountedPrice) || Math.round(originalPrice * (1 - discountPercent / 100)),
       start_time: new Date().toISOString(),
@@ -392,7 +478,7 @@ export default function OffersTab() {
 
       {/* Add / Edit Offer Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full sm:w-[50vw] sm:max-w-[50vw] md:w-[50vw] md:max-w-[50vw] max-w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden min-w-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display text-xl">
               <Zap className="h-5 w-5 text-volt" />
@@ -405,20 +491,215 @@ export default function OffersTab() {
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             {/* Product selection */}
-            <div className="space-y-1.5">
-              <Label className="font-semibold">Target Product</Label>
-              <Select value={productId} onValueChange={handleProductChange}>
-                <SelectTrigger className="bg-secondary">
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} — {formatPrice(Number(p.price), i18n.language)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <div className="flex flex-col items-start gap-2">
+                <Label className="font-semibold text-sm">Target Product</Label>
+                {!editingOffer && (
+                  <div className="inline-flex rounded-md bg-secondary/80 p-0.5 border border-border">
+                    <button
+                      type="button"
+                      onClick={() => setProductMode('select')}
+                      className={`px-3 py-1 text-xs font-semibold rounded transition-all ${
+                        productMode === 'select'
+                          ? 'bg-volt text-volt-fg shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      Select Existing Product
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProductMode('new')}
+                      className={`px-3 py-1 text-xs font-semibold rounded transition-all ${
+                        productMode === 'new'
+                          ? 'bg-volt text-volt-fg shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      + Add New Product
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {productMode === 'select' ? (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search / filter product in catalog..."
+                      value={productFilter}
+                      onChange={(e) => setProductFilter(e.target.value)}
+                      className="pl-9 h-9 text-xs bg-secondary"
+                    />
+                  </div>
+
+                  <Select value={productId} onValueChange={handleProductChange}>
+                    <SelectTrigger className="bg-secondary w-full min-w-0 max-w-full">
+                      <SelectValue placeholder="Select a product from catalog..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {candidateProducts.length === 0 ? (
+                        <div className="p-3 text-xs text-center text-muted-foreground">
+                          No matching products found.{' '}
+                          <button
+                            type="button"
+                            onClick={() => setProductMode('new')}
+                            className="text-volt font-bold hover:underline"
+                          >
+                            + Create a new product
+                          </button>
+                        </div>
+                      ) : (
+                        candidateProducts.map((p) => (
+                          <SelectItem key={p.id} value={p.id} textValue={p.name}>
+                            <div className="flex items-center justify-between w-full min-w-0 gap-3">
+                              <span className="truncate flex-1 text-left min-w-0">{p.name}</span>
+                              <span className="font-semibold text-volt shrink-0 ml-2">
+                                {formatPrice(Number(p.price), i18n.language)}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+
+                  {selectedProduct && (
+                    <div className="rounded-lg border border-border bg-secondary/30 p-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded border border-border bg-background overflow-hidden shrink-0 flex items-center justify-center">
+                          {selectedProduct.images?.[0] ? (
+                            <img src={selectedProduct.images[0]} alt="" className="h-full w-full object-contain" />
+                          ) : (
+                            <Package className="h-5 w-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-bold text-xs text-foreground">{selectedProduct.name}</div>
+                          <div className="text-[11px] text-muted-foreground">
+                            Stock: <span className="font-semibold text-foreground">{selectedProduct.stock}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="font-bold text-sm text-volt">
+                        {formatPrice(Number(selectedProduct.price), i18n.language)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* NEW PRODUCT SUB-FORM */
+                <div className="space-y-3 rounded-lg border border-volt/30 bg-volt/5 p-3.5">
+                  <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                    <span className="text-xs font-bold flex items-center gap-1.5 text-volt">
+                      <Plus className="h-3.5 w-3.5" /> Add New Product to Catalog & Offer
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setProductMode('select')}
+                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                    >
+                      ← Select existing product
+                    </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">Product Name *</Label>
+                    <Input
+                      value={newOfferProdName}
+                      onChange={(e) => {
+                        setNewOfferProdName(e.target.value)
+                        if (!title || title === newOfferProdName) setTitle(e.target.value)
+                      }}
+                      placeholder="e.g. Logitech G Pro X Superlight Wireless"
+                      className="h-8 text-xs bg-background"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold">Regular Price (MAD) *</Label>
+                      <Input
+                        type="number"
+                        value={newOfferProdPrice}
+                        onChange={(e) => handleNewProductPriceChange(e.target.value)}
+                        placeholder="e.g. 1490"
+                        className="h-8 text-xs bg-background"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold">Stock Units</Label>
+                      <Input
+                        type="number"
+                        value={newOfferProdStock}
+                        onChange={(e) => setNewOfferProdStock(e.target.value)}
+                        placeholder="10"
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">Category</Label>
+                    <Select value={newOfferProdCategory} onValueChange={setNewOfferProdCategory}>
+                      <SelectTrigger className="h-8 text-xs bg-background">
+                        <SelectValue placeholder="Select a category..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.id} className="text-xs">
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Image */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold">Product Image</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newOfferProdImage}
+                        onChange={(e) => setNewOfferProdImage(e.target.value)}
+                        placeholder="Paste image URL or upload file"
+                        className="h-8 text-xs bg-background flex-1"
+                      />
+                      <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-secondary hover:bg-secondary/80 text-xs font-semibold border border-border shrink-0">
+                        <Upload className="h-3.5 w-3.5 text-volt" />
+                        <span>{uploadingImage ? '...' : 'Upload'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            setUploadingImage(true)
+                            try {
+                              const dataUrl = await fileToResizedDataUrl(file)
+                              setNewOfferProdImage(dataUrl)
+                              toast.success('Image uploaded!')
+                            } catch (err: any) {
+                              toast.error(err?.message || 'Image error')
+                            } finally {
+                              setUploadingImage(false)
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    {newOfferProdImage && (
+                      <div className="mt-1 h-12 w-12 rounded border border-border bg-background overflow-hidden p-0.5">
+                        <img src={newOfferProdImage} alt="Preview" className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -566,12 +847,12 @@ export default function OffersTab() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                Cancel
-              </Button>
+            <div className="flex justify-start items-center gap-3 pt-4 border-t border-border">
               <Button type="submit" className="bg-volt text-volt-fg hover:bg-volt-dim font-bold">
                 {editingOffer ? 'Save Offer Changes' : 'Launch Offer & Timer'}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
               </Button>
             </div>
           </form>
