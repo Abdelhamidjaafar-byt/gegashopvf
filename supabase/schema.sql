@@ -189,10 +189,19 @@ alter table public.orders     enable row level security;
 alter table public.reviews    enable row level security;
 alter table public.wishlists  enable row level security;
 
--- users: read/update own row; admins read/update everyone. No client inserts (trigger only).
+-- users: users read/update/insert own row; admins read/update everyone.
 drop policy if exists users_select on public.users;
-create policy users_select on public.users
-  for select using (auth.uid() = id or public.is_admin());
+drop policy if exists users_select_own on public.users;
+drop policy if exists users_select_admin on public.users;
+create policy users_select_own on public.users
+  for select using (auth.uid() = id);
+create policy users_select_admin on public.users
+  for select using (public.is_admin());
+
+drop policy if exists users_insert on public.users;
+create policy users_insert on public.users
+  for insert with check (auth.uid() = id);
+
 drop policy if exists users_update on public.users;
 create policy users_update on public.users
   for update using (auth.uid() = id or public.is_admin())

@@ -61,7 +61,7 @@ export default function CheckoutPage() {
   const submit = async () => {
     if (!user) {
       toast.info(t('checkout.signInRequired'))
-      navigate('/auth')
+      navigate('/auth', { state: { from: '/checkout' } })
       return
     }
     if (!form.full_name || !form.phone || !form.street || !form.city) {

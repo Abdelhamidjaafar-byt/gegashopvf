@@ -17,7 +17,7 @@ export default function AdminPage() {
   const { user, isAdmin, isProductManager, hasAdminAccess, loading } = useAuth()
 
   if (loading) return null
-  if (!user) return <Navigate to="/auth" replace />
+  if (!user) return <Navigate to="/auth" state={{ from: '/admin' }} replace />
   if (!hasAdminAccess) return <Navigate to="/" replace />
 
   return (

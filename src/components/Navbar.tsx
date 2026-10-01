@@ -391,9 +391,16 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild size="sm" className="hidden sm:flex bg-volt text-volt-fg hover:bg-volt-dim font-bold text-xs h-9">
-              <Link to="/auth">{t('nav.signIn')}</Link>
-            </Button>
+            <>
+              <Button asChild size="sm" className="hidden sm:flex bg-volt text-volt-fg hover:bg-volt-dim font-bold text-xs h-9">
+                <Link to="/auth">{t('nav.signIn')}</Link>
+              </Button>
+              <Button asChild variant="ghost" size="icon" className="h-9 w-9 sm:hidden text-foreground hover:text-volt" aria-label={t('nav.signIn')}>
+                <Link to="/auth">
+                  <User className="h-4 w-4" />
+                </Link>
+              </Button>
+            </>
           )}
 
           {/* MOBILE MENU TRIGGER */}
@@ -456,13 +463,36 @@ export default function Navbar() {
                 <Link to="/cart" onClick={() => setOpen(false)} className="text-base font-bold">
                   {t('nav.cart')} ({count})
                 </Link>
-                <Link to="/profile" onClick={() => setOpen(false)} className="text-base font-bold">
-                  {t('nav.account')}
-                </Link>
-                {hasAdminAccess && (
-                  <Link to="/admin" onClick={() => setOpen(false)} className="text-base font-bold text-volt">
-                    {t('nav.admin')}
-                  </Link>
+                {user ? (
+                  <>
+                    <Link to="/profile" onClick={() => setOpen(false)} className="text-base font-bold">
+                      {t('nav.account')}
+                    </Link>
+                    {hasAdminAccess && (
+                      <Link to="/admin" onClick={() => setOpen(false)} className="text-base font-bold text-volt">
+                        {t('nav.admin')}
+                      </Link>
+                    )}
+                    <div className="border-t border-border pt-2 mt-2">
+                      <button
+                        onClick={() => {
+                          signOut()
+                          setOpen(false)
+                        }}
+                        className="flex items-center gap-2 text-sm font-bold text-destructive hover:underline py-2"
+                      >
+                        <LogOut className="h-4 w-4" /> {t('nav.signOut')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="border-t border-border pt-4 mt-2">
+                    <Button asChild className="w-full bg-volt text-volt-fg hover:bg-volt-dim font-bold text-sm h-10">
+                      <Link to="/auth" onClick={() => setOpen(false)}>
+                        <User className="mr-2 h-4 w-4" /> {t('nav.signIn')}
+                      </Link>
+                    </Button>
+                  </div>
                 )}
               </nav>
             </SheetContent>

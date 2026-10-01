@@ -100,7 +100,10 @@ export default function ResetPasswordPage() {
               {t('auth.invalidResetLinkSub')}
             </p>
             <Button
-              onClick={() => navigate('/auth')}
+              onClick={() => {
+                clearPasswordRecovery()
+                navigate('/auth')
+              }}
               className="mt-4 w-full bg-volt font-bold text-volt-fg hover:bg-volt-dim"
             >
               {t('auth.requestNewLink')}
@@ -108,6 +111,7 @@ export default function ResetPasswordPage() {
             <div className="pt-2">
               <Link
                 to="/auth"
+                onClick={() => clearPasswordRecovery()}
                 className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="mr-1 h-3 w-3" />
@@ -176,6 +180,7 @@ export default function ResetPasswordPage() {
             <div className="pt-2 text-center">
               <Link
                 to="/auth"
+                onClick={() => clearPasswordRecovery()}
                 className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="mr-1 h-3 w-3" />

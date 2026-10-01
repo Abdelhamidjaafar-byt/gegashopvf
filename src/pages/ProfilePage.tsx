@@ -154,7 +154,7 @@ export default function ProfilePage() {
   }
 
   if (authLoading) return null
-  if (!user) return <Navigate to="/auth" replace />
+  if (!user) return <Navigate to="/auth" state={{ from: '/profile' }} replace />
 
   const wishlistProducts = products.filter((p) => wishIds.has(p.id))
 
